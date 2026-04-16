@@ -243,7 +243,6 @@
         .presentation-mode .section-icon-box { width: 3.5rem; height: 3.5rem; font-size: 1.5rem; }
 
         /* Sembunyikan elemen Input/Form/Tabel Admin saat Presentasi */
-        .presentation-mode #welcome-banner,
         .presentation-mode #admin-update-status,
         .presentation-mode #admin-list-truck, 
         .presentation-mode #admin-master-jenis-truck, 
@@ -489,10 +488,10 @@
                     <h2 id="header-title" class="text-xl font-bold text-gray-800">Dashboard</h2>
                 </div>
                 <div class="flex items-center gap-6">
-                    <div class="flex items-center gap-4 bg-gray-50 px-5 py-2.5 rounded-2xl border border-gray-200 cursor-default">
-                        <div class="text-right hidden sm:block">
-                            <p id="user-info" class="text-sm font-bold text-gray-800 leading-tight"></p>
-                            <p id="role-info" class="text-xs font-semibold text-gray-500 mt-0.5"></p>
+                    <div class="flex items-center gap-4 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-200 cursor-default shadow-sm">
+                        <div class="text-right block">
+                            <p class="text-sm font-extrabold text-gray-800 leading-tight">Halo, <span id="user-info" class="text-blue-600"></span>! 👋</p>
+                            <p class="text-[11px] font-bold text-gray-500 mt-1 uppercase tracking-wider">Akses: <span id="role-info" class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded"></span></p>
                         </div>
                         <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md"><i class="fas fa-user text-sm"></i></div>
                     </div>
@@ -519,13 +518,6 @@
             </header>
 
             <main class="flex-1 p-6 md:p-10" id="main-content-area">
-                
-                <div id="welcome-banner" class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-gray-800 tracking-tight">Halo, <span id="welcome-name" class="text-blue-600"></span>! 👋</h2>
-                        <p class="text-sm font-medium text-gray-500 mt-1">Anda login dengan akses peran: <span id="welcome-role" class="px-2.5 py-1 bg-blue-50 text-blue-600 font-bold rounded-lg ml-1"></span></p>
-                    </div>
-                </div>
 
                 <div id="shared-cards" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 md:gap-8 mb-10 transition-all duration-500"></div>
                 
@@ -704,6 +696,7 @@
                                         <th class="whitespace-nowrap">Plat Nomor</th>
                                         <th class="whitespace-nowrap">Vendor Pengelola</th>
                                         <th class="whitespace-nowrap">Status Terkini</th>
+                                        <th class="whitespace-nowrap">DN</th>
                                         <th class="whitespace-nowrap">No Cont</th>
                                         <th class="whitespace-nowrap">Produk</th>
                                         <th class="whitespace-nowrap">Timbang 1</th>
@@ -850,7 +843,7 @@
                         </div>
                         <div class="overflow-x-auto rounded-xl border border-gray-200">
                             <table class="table-modern" id="table-summary">
-                                <thead><tr><th class="whitespace-nowrap">Plat Nomor</th><th class="whitespace-nowrap">Status Terkini</th><th class="whitespace-nowrap">No Cont</th><th class="whitespace-nowrap">Produk</th><th class="whitespace-nowrap">Timbang 1</th><th class="whitespace-nowrap">Timbang 2</th><th class="whitespace-nowrap">Last Update</th></tr></thead>
+                                <thead><tr><th class="whitespace-nowrap">Plat Nomor</th><th class="whitespace-nowrap">Status Terkini</th><th class="whitespace-nowrap">DN</th><th class="whitespace-nowrap">No Cont</th><th class="whitespace-nowrap">Produk</th><th class="whitespace-nowrap">Timbang 1</th><th class="whitespace-nowrap">Timbang 2</th><th class="whitespace-nowrap">Last Update</th></tr></thead>
                                 <tbody></tbody>
                             </table>
                         </div>
@@ -888,7 +881,8 @@
 
                         <div class="overflow-x-auto rounded-xl border border-gray-200">
                             <table class="table-modern" id="table-ritase">
-                                <thead><tr><th class="whitespace-nowrap">Tgl Diselesaikan</th><th class="whitespace-nowrap">Nama Vendor</th><th class="whitespace-nowrap">Plat Nomor</th><th class="whitespace-nowrap">Jenis Mobil</th><th class="whitespace-nowrap">Nama Driver</th><th class="whitespace-nowrap">No Container</th><th class="whitespace-nowrap">Jenis Produk</th><th class="whitespace-nowrap">Waktu DCO</th><th class="whitespace-nowrap">Timbang 1</th><th class="whitespace-nowrap">Timbang 2</th><th class="whitespace-nowrap">Dokumen FO</th></tr></thead>
+                                <thead>
+                                    </thead>
                                 <tbody></tbody>
                             </table>
                         </div>
@@ -927,6 +921,16 @@
         
         let perfBarChart = null;
         let perfDonutChart = null;
+
+        // Helper date format for inputs
+        const formatDateForInput = (timestamp) => {
+            if(!timestamp) return '';
+            if (typeof timestamp === 'string' && timestamp.includes('T')) return timestamp.slice(0, 16);
+            const d = new Date(timestamp);
+            if(isNaN(d.getTime())) return timestamp;
+            const tzOffset = d.getTimezoneOffset() * 60000;
+            return (new Date(d - tzOffset)).toISOString().slice(0, 16);
+        };
 
         // JAM REALTIME PROYEKTOR
         function updateClock() {
@@ -1008,12 +1012,10 @@
                     if (userDoc.exists()) {
                         currentUser = user; userRole = userDoc.data().role; vendorName = userDoc.data().name || 'Admin Pusat';
                         
+                        // Set text on Top Sticky Header
                         document.getElementById('user-info').innerText = vendorName;
                         document.getElementById('role-info').innerText = userRole === 'admin' ? 'Administrator' : 'Vendor EMKL';
                         
-                        if(document.getElementById('welcome-name')) document.getElementById('welcome-name').innerText = vendorName;
-                        if(document.getElementById('welcome-role')) document.getElementById('welcome-role').innerText = userRole === 'admin' ? 'Administrator' : 'Vendor EMKL';
-
                         setupRoleUI(); loadData();
                         setTimeout(() => {
                             document.getElementById('loading-screen').classList.add('hidden');
@@ -1070,6 +1072,7 @@
                 }
             } else if(['admin-ritase', 'emkl-ritase'].includes(tabId)) { 
                 document.getElementById('shared-ritase').classList.add('active'); 
+                renderRitaseTable(); 
             } else { 
                 document.getElementById(tabId).classList.add('active'); 
             }
@@ -1077,11 +1080,9 @@
             if(['admin-home', 'emkl-home'].includes(tabId)) { 
                 document.getElementById('shared-cards').style.display = 'grid'; 
                 document.getElementById('shared-status-rincian').style.display = 'block'; 
-                if(document.getElementById('welcome-banner')) document.getElementById('welcome-banner').style.display = 'flex';
             } else { 
                 document.getElementById('shared-cards').style.display = 'none'; 
                 document.getElementById('shared-status-rincian').style.display = 'none'; 
-                if(document.getElementById('welcome-banner')) document.getElementById('welcome-banner').style.display = 'none';
             }
             
             if(element) element.classList.add('active'); 
@@ -1290,10 +1291,10 @@
                 html: `
                     <div style="text-align: left; font-family: Poppins;">
                         <label style="font-size: 12px; font-weight: 600; color: #64748b;">Nama Pengguna / Vendor</label>
-                        <input id="sw-akun-nama" class="swal2-input" value="${oldName}" style="margin-top: 5px; border-radius: 8px; font-size: 14px;">
+                        <input id="sw-akun-nama" class="swal2-input" value="${oldName}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">
                         
                         <label style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 15px; display: block;">Role / Akses</label>
-                        <select id="sw-akun-role" class="swal2-input" style="margin-top: 5px; border-radius: 8px; font-size: 14px;">
+                        <select id="sw-akun-role" class="swal2-input" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">
                             <option value="admin" ${oldRole === 'admin' ? 'selected' : ''}>Admin</option>
                             <option value="emkl" ${oldRole === 'emkl' ? 'selected' : ''}>EMKL</option>
                         </select>
@@ -1337,7 +1338,7 @@
         // ==========================================
         window.toggleAdminFormFields = (id, selectedStatus) => {
             const isTersedia = selectedStatus.toLowerCase() === 'tersedia';
-            ['adm_nc_', 'adm_jp_', 'adm_dc_', 'adm_t1_', 'adm_t2_', 'adm_fo_'].forEach(prefix => { 
+            ['adm_dn_', 'adm_nc_', 'adm_jp_', 'adm_dc_', 'adm_t1_', 'adm_t2_', 'adm_fo_'].forEach(prefix => { 
                 const el = document.getElementById(prefix + id); 
                 if (el) el.disabled = isTersedia; 
             });
@@ -1411,6 +1412,7 @@
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-tag text-gray-300 mr-1.5"></i>Status Realtime</label><select id="adm_st_${t.id}" class="input-modern font-bold text-blue-700 shadow-sm" onchange="window.toggleAdminFormFields('${t.id}', this.value)">${finalStatusOpts}</select></div>
+                        <div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-file-invoice text-gray-300 mr-1.5"></i>DN</label><input type="text" id="adm_dn_${t.id}" class="input-modern" value="${t.dn || ''}" ${disabledStr} placeholder="Kosong"></div>
                         <div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-box text-gray-300 mr-1.5"></i>No Container</label><input type="text" id="adm_nc_${t.id}" class="input-modern" value="${t.no_container || ''}" ${disabledStr} placeholder="Kosong"></div>
                         <div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-cube text-gray-300 mr-1.5"></i>Jenis Produk</label><select id="adm_jp_${t.id}" class="input-modern text-xs" ${disabledStr}>${produkOpts}</select></div>
                         <div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-file-alt text-gray-300 mr-1.5"></i>Waktu DCO</label><input type="datetime-local" id="adm_dc_${t.id}" class="input-modern text-xs" value="${t.daftar_dco || ''}" ${disabledStr}></div>
@@ -1435,9 +1437,9 @@
             const st = document.getElementById(`adm_st_${id}`).value; 
             let dataUpdate = { status: st, nama_driver: document.getElementById(`adm_nd_${id}`).value, no_hp: document.getElementById(`adm_nh_${id}`).value, terakhir_update: Date.now() }; 
             if(st.toLowerCase() !== 'tersedia') { 
-                dataUpdate = { ...dataUpdate, jenis_produk: document.getElementById(`adm_jp_${id}`).value, daftar_dco: document.getElementById(`adm_dc_${id}`).value, tgl_timbang_1: document.getElementById(`adm_t1_${id}`).value, tgl_timbang_2: document.getElementById(`adm_t2_${id}`).value, fo: document.getElementById(`adm_fo_${id}`).value, no_container: document.getElementById(`adm_nc_${id}`).value }; 
+                dataUpdate = { ...dataUpdate, dn: document.getElementById(`adm_dn_${id}`).value, jenis_produk: document.getElementById(`adm_jp_${id}`).value, daftar_dco: document.getElementById(`adm_dc_${id}`).value, tgl_timbang_1: document.getElementById(`adm_t1_${id}`).value, tgl_timbang_2: document.getElementById(`adm_t2_${id}`).value, fo: document.getElementById(`adm_fo_${id}`).value, no_container: document.getElementById(`adm_nc_${id}`).value }; 
             } else { 
-                dataUpdate = { ...dataUpdate, jenis_produk: '', daftar_dco: '', tgl_timbang_1: '', tgl_timbang_2: '', fo: '', no_container: '' }; 
+                dataUpdate = { ...dataUpdate, dn: '', jenis_produk: '', daftar_dco: '', tgl_timbang_1: '', tgl_timbang_2: '', fo: '', no_container: '' }; 
             } 
             await updateDoc(doc(db, "trucks", id), dataUpdate); 
             Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Database Tersinkronisasi', showConfirmButton: false, timer: 1500});
@@ -1446,10 +1448,32 @@
         window.finishAdminDelivery = async (id) => {
             const t = trucksData.find(x => x.id === id); 
             if(!t || (t.status||'').toLowerCase() === 'tersedia') return; 
+
+            const nd = document.getElementById(`adm_nd_${id}`).value.trim();
+            const nh = document.getElementById(`adm_nh_${id}`).value.trim();
+            const dn = document.getElementById(`adm_dn_${id}`).value.trim();
+            const nc = document.getElementById(`adm_nc_${id}`).value.trim();
+            const jp = document.getElementById(`adm_jp_${id}`).value;
+            const dc = document.getElementById(`adm_dc_${id}`).value;
+            const t1 = document.getElementById(`adm_t1_${id}`).value;
+            const t2 = document.getElementById(`adm_t2_${id}`).value;
+            const fo = document.getElementById(`adm_fo_${id}`).value.trim();
+
+            if(!nd || !nh || !dn || !nc || !jp || !dc || !t1 || !t2 || !fo) {
+                return Swal.fire({icon: 'error', title: 'Data Belum Lengkap', text: 'Mohon lengkapi semua form (DN, Container, Produk, Waktu, dll) sebelum Selesai Delivery.', confirmButtonColor: '#2563eb'});
+            }
+
+            const dcoDate = new Date(dc);
+            const t1Date = new Date(t1);
+            const t2Date = new Date(t2);
+
+            if(dcoDate > t1Date) return Swal.fire({icon: 'error', title: 'Urutan Waktu Salah', text: 'Tanggal Daftar DCO tidak boleh lebih dari Tanggal Timbang 1.', confirmButtonColor: '#2563eb'});
+            if(t1Date > t2Date) return Swal.fire({icon: 'error', title: 'Urutan Waktu Salah', text: 'Tanggal Timbang 1 tidak boleh lebih dari Tanggal Timbang 2.', confirmButtonColor: '#2563eb'});
+
             Swal.fire({ title: 'Konfirmasi Selesai?', html: "Data truck akan <b>dikosongkan</b> dan dimasukkan ke Laporan Ritase.", icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonColor: '#cbd5e1', confirmButtonText: 'Selesaikan' }).then(async (res) => { 
                 if(res.isConfirmed) { 
-                    await addDoc(collection(db, "ritase"), { plat_nomor: t.plat_nomor, vendor: t.vendor, jenis_mobil: t.jenis_mobil, nama_driver: t.nama_driver, no_hp: t.no_hp, no_container: t.no_container, jenis_produk: t.jenis_produk, daftar_dco: t.daftar_dco, tgl_timbang_1: t.tgl_timbang_1, tgl_timbang_2: t.tgl_timbang_2, fo: t.fo, tgl_selesai: Date.now() }); 
-                    await updateDoc(doc(db, "trucks", id), { status: 'Tersedia', jenis_produk: '', daftar_dco: '', tgl_timbang_1: '', tgl_timbang_2: '', fo: '', no_container: '', terakhir_update: Date.now() }); 
+                    await addDoc(collection(db, "ritase"), { plat_nomor: t.plat_nomor, vendor: t.vendor, jenis_mobil: t.jenis_mobil, nama_driver: nd, no_hp: nh, dn: dn, no_container: nc, jenis_produk: jp, daftar_dco: dc, tgl_timbang_1: t1, tgl_timbang_2: t2, fo: fo, tgl_selesai: Date.now() }); 
+                    await updateDoc(doc(db, "trucks", id), { status: 'Tersedia', dn: '', jenis_produk: '', daftar_dco: '', tgl_timbang_1: '', tgl_timbang_2: '', fo: '', no_container: '', terakhir_update: Date.now() }); 
                     Swal.fire({icon: 'success', title: 'Sukses', text: 'Delivery Selesai dicatat ke Ritase.', confirmButtonColor: '#2563eb'}); 
                 } 
             });
@@ -1708,6 +1732,7 @@
                     <td class="font-bold text-blue-600 whitespace-nowrap">${t.plat_nomor}</td>
                     <td class="font-bold text-gray-700 whitespace-nowrap">${t.vendor || '-'}</td>
                     <td class="whitespace-nowrap">${badgeHtml}</td>
+                    <td class="text-sm font-medium text-gray-600 whitespace-nowrap">${t.dn || '-'}</td>
                     <td class="text-sm font-medium text-gray-600 whitespace-nowrap">${t.no_container || '-'}</td>
                     <td class="text-sm font-medium text-gray-600 whitespace-nowrap">${t.jenis_produk || '-'}</td>
                     <td class="text-xs text-gray-500 font-medium whitespace-nowrap">${t1}</td>
@@ -1732,11 +1757,11 @@
             const thead = document.getElementById('modal-table-head');
             if (thead) {
                 if (isDCO) {
-                    thead.innerHTML = `<tr><th class="w-10 text-center">#</th><th>Vendor Pengelola</th><th>Plat Nomor</th><th>Jenis Kendaraan</th><th>Nama Pengemudi</th><th>Status Terkini</th><th>Tgl Daftar DCO</th><th>Lead Time</th></tr>`;
+                    thead.innerHTML = `<tr><th class="w-10 text-center">#</th><th>Vendor Pengelola</th><th>Plat Nomor</th><th>Jenis Kendaraan</th><th>Nama Pengemudi</th><th>Status Terkini</th><th>DN</th><th>Tgl Daftar DCO</th><th>Lead Time</th></tr>`;
                 } else if (isOtwMill) {
-                    thead.innerHTML = `<tr><th class="w-10 text-center">#</th><th>Vendor Pengelola</th><th>Plat Nomor</th><th>Jenis Kendaraan</th><th>Nama Pengemudi</th><th>Status Terkini</th><th>Tgl Selesai Delivery</th><th>Lama Perjalanan</th></tr>`;
+                    thead.innerHTML = `<tr><th class="w-10 text-center">#</th><th>Vendor Pengelola</th><th>Plat Nomor</th><th>Jenis Kendaraan</th><th>Nama Pengemudi</th><th>Status Terkini</th><th>DN</th><th>Tgl Selesai Delivery</th><th>Lama Perjalanan</th></tr>`;
                 } else {
-                    thead.innerHTML = `<tr><th class="w-10 text-center">#</th><th>Vendor Pengelola</th><th>Plat Nomor</th><th>Jenis Kendaraan</th><th>Nama Pengemudi</th><th>Status Terkini</th></tr>`;
+                    thead.innerHTML = `<tr><th class="w-10 text-center">#</th><th>Vendor Pengelola</th><th>Plat Nomor</th><th>Jenis Kendaraan</th><th>Nama Pengemudi</th><th>Status Terkini</th><th>DN</th></tr>`;
                 }
             }
 
@@ -1768,7 +1793,7 @@
             
             tbody.innerHTML = '';
             if(filteredData.length === 0) {
-                let colspan = (isDCO || isOtwMill) ? 8 : 6;
+                let colspan = (isDCO || isOtwMill) ? 9 : 7;
                 tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-20"><i class="fas fa-box-open text-gray-300 text-6xl mb-6 block"></i><p class="text-gray-500 text-xl font-bold">TIDAK ADA DATA</p></td></tr>`;
             } else {
                 filteredData.forEach((t, index) => {
@@ -1837,6 +1862,7 @@
                         <td>${t.jenis_mobil}</td>
                         <td class="text-gray-600">${t.nama_driver}</td>
                         <td>${badgeHtml}</td>
+                        <td class="text-gray-600 font-medium">${t.dn || '-'}</td>
                         ${extraCol}
                     </tr>`;
                 });
@@ -1949,7 +1975,7 @@
 
         window.toggleFormFields = (id, selectedStatus) => {
             const isTersedia = selectedStatus.toLowerCase() === 'tersedia';
-            ['nc_', 'jp_', 'dc_', 't1_', 't2_', 'fo_'].forEach(prefix => { const el = document.getElementById(prefix + id); if (el) el.disabled = isTersedia; });
+            ['nc_', 'jp_', 'dc_', 't1_', 't2_', 'fo_', 'dn_'].forEach(prefix => { const el = document.getElementById(prefix + id); if (el) el.disabled = isTersedia; });
             const btnDel = document.getElementById('btn_del_' + id); if(btnDel) { btnDel.disabled = isTersedia; if(isTersedia) { btnDel.style.opacity = '0.5'; btnDel.style.cursor = 'not-allowed'; } else { btnDel.style.opacity = '1'; btnDel.style.cursor = 'pointer'; } }
         };
 
@@ -1977,7 +2003,7 @@
                     if (filterStatus === 'ALL' || (t.status || '').toLowerCase() === filterStatus.toLowerCase()) {
                         let sColor = getStatusStyle(t.status);
                         let badgeHtml = `<span class="badge" style="background-color: ${sColor.bg}; color: ${sColor.icon}; border: 1px solid ${sColor.border};">${t.status}</span>`;
-                        tbSummary.innerHTML += `<tr class="group"><td class="font-bold text-gray-800 whitespace-nowrap">${t.plat_nomor}</td><td class="whitespace-nowrap">${badgeHtml}</td><td class="text-sm font-medium text-gray-600 whitespace-nowrap">${t.no_container || '-'}</td><td class="text-sm font-medium text-gray-600 whitespace-nowrap">${t.jenis_produk || '-'}</td><td class="text-xs text-gray-500 font-medium whitespace-nowrap">${t1}</td><td class="text-xs text-gray-500 font-medium whitespace-nowrap">${t2}</td><td class="text-xs font-bold text-blue-500 bg-blue-50 px-2 rounded whitespace-nowrap">${upd}</td></tr>`;
+                        tbSummary.innerHTML += `<tr class="group"><td class="font-bold text-gray-800 whitespace-nowrap">${t.plat_nomor}</td><td class="whitespace-nowrap">${badgeHtml}</td><td class="text-sm font-medium text-gray-600 whitespace-nowrap">${t.dn || '-'}</td><td class="text-sm font-medium text-gray-600 whitespace-nowrap">${t.no_container || '-'}</td><td class="text-sm font-medium text-gray-600 whitespace-nowrap">${t.jenis_produk || '-'}</td><td class="text-xs text-gray-500 font-medium whitespace-nowrap">${t1}</td><td class="text-xs text-gray-500 font-medium whitespace-nowrap">${t2}</td><td class="text-xs font-bold text-blue-500 bg-blue-50 px-2 rounded whitespace-nowrap">${upd}</td></tr>`;
                     }
                 }
                 const isT = (t.status||'').toLowerCase() === 'tersedia'; const disabledStr = isT ? 'disabled' : '';
@@ -1986,13 +2012,66 @@
                 const produkOpts = `<option value="">-- Pilih --</option>` + masterJenisProduk.map(p => `<option value="${p.name}" ${t.jenis_produk === p.name ? 'selected' : ''}>${p.name}</option>`).join('');
 
                 if(container) {
-                    container.innerHTML += `<div class="card-container relative overflow-hidden" id="card-${t.id}"><div class="absolute left-0 top-0 bottom-0 w-1" style="background-color: ${sColor.icon};"></div><div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 pb-5 mb-6 gap-4"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl bg-gray-50 text-gray-400 border border-gray-100 flex items-center justify-center text-xl shadow-sm"><i class="fas fa-truck"></i></div><div><h4 class="text-xl font-extrabold text-gray-800 tracking-tight leading-none mb-1">${t.plat_nomor}</h4><p class="text-xs font-semibold text-gray-400 tracking-wider uppercase">${t.jenis_mobil}</p></div></div><span class="badge" style="font-size: 0.85rem; padding: 0.5rem 1.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); ${getStatusColor(t.status)}">${t.status}</span></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-tag text-gray-300 mr-1.5"></i>Status Realtime</label><select id="st_${t.id}" class="input-modern font-bold text-blue-700 shadow-sm" onchange="window.toggleFormFields('${t.id}', this.value)">${finalStatusOpts}</select></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-box text-gray-300 mr-1.5"></i>No Container</label><input type="text" id="nc_${t.id}" class="input-modern" value="${t.no_container || ''}" ${disabledStr} placeholder="Kosong"></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-cube text-gray-300 mr-1.5"></i>Jenis Produk</label><select id="jp_${t.id}" class="input-modern text-xs" ${disabledStr}>${produkOpts}</select></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-file-alt text-gray-300 mr-1.5"></i>Waktu DCO</label><input type="datetime-local" id="dc_${t.id}" class="input-modern text-xs" value="${t.daftar_dco || ''}" ${disabledStr}></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-clock text-gray-300 mr-1.5"></i>Timbang 1</label><input type="datetime-local" id="t1_${t.id}" class="input-modern text-xs" value="${t.tgl_timbang_1 || ''}" ${disabledStr}></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-clock text-gray-300 mr-1.5"></i>Timbang 2</label><input type="datetime-local" id="t2_${t.id}" class="input-modern text-xs" value="${t.tgl_timbang_2 || ''}" ${disabledStr}></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-hashtag text-gray-300 mr-1.5"></i>Nomor FO</label><input type="text" id="fo_${t.id}" class="input-modern" value="${t.fo || ''}" ${disabledStr} placeholder="Kosong"></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-id-badge text-gray-300 mr-1.5"></i>Nama Supir</label><input type="text" id="nd_${t.id}" class="input-modern" value="${t.nama_driver || ''}"></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-mobile-alt text-gray-300 mr-1.5"></i>Kontak Supir</label><input type="text" id="nh_${t.id}" class="input-modern" value="${t.no_hp || ''}"></div></div><div class="flex flex-col sm:flex-row justify-between items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 mt-2"><div class="text-xs font-semibold text-gray-500 flex items-center bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm mb-3 sm:mb-0"><i class="fas fa-sync-alt text-blue-500 mr-2"></i> Update Data: ${upd}</div><div class="flex flex-wrap gap-3 w-full sm:w-auto justify-end"><button onclick="window.saveUpdateStatus('${t.id}')" class="btn-primary w-full sm:w-auto"><i class="fas fa-cloud-upload-alt"></i> Update Database</button><button id="btn_del_${t.id}" onclick="window.finishDelivery('${t.id}')" class="btn-success w-full sm:w-auto" ${disabledStr}><i class="fas fa-check-circle"></i> Selesai & Reset</button></div></div></div>`;
+                    container.innerHTML += `<div class="card-container relative overflow-hidden" id="card-${t.id}"><div class="absolute left-0 top-0 bottom-0 w-1" style="background-color: ${sColor.icon};"></div><div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 pb-5 mb-6 gap-4"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl bg-gray-50 text-gray-400 border border-gray-100 flex items-center justify-center text-xl shadow-sm"><i class="fas fa-truck"></i></div><div><h4 class="text-xl font-extrabold text-gray-800 tracking-tight leading-none mb-1">${t.plat_nomor}</h4><p class="text-xs font-semibold text-gray-400 tracking-wider uppercase">${t.jenis_mobil}</p></div></div><span class="badge" style="font-size: 0.85rem; padding: 0.5rem 1.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); ${getStatusColor(t.status)}">${t.status}</span></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-tag text-gray-300 mr-1.5"></i>Status Realtime</label><select id="st_${t.id}" class="input-modern font-bold text-blue-700 shadow-sm" onchange="window.toggleFormFields('${t.id}', this.value)">${finalStatusOpts}</select></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-file-invoice text-gray-300 mr-1.5"></i>DN</label><input type="text" id="dn_${t.id}" class="input-modern" value="${t.dn || ''}" ${disabledStr} placeholder="Kosong"></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-box text-gray-300 mr-1.5"></i>No Container</label><input type="text" id="nc_${t.id}" class="input-modern" value="${t.no_container || ''}" ${disabledStr} placeholder="Kosong"></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-cube text-gray-300 mr-1.5"></i>Jenis Produk</label><select id="jp_${t.id}" class="input-modern text-xs" ${disabledStr}>${produkOpts}</select></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-file-alt text-gray-300 mr-1.5"></i>Waktu DCO</label><input type="datetime-local" id="dc_${t.id}" class="input-modern text-xs" value="${t.daftar_dco || ''}" ${disabledStr}></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-clock text-gray-300 mr-1.5"></i>Timbang 1</label><input type="datetime-local" id="t1_${t.id}" class="input-modern text-xs" value="${t.tgl_timbang_1 || ''}" ${disabledStr}></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-clock text-gray-300 mr-1.5"></i>Timbang 2</label><input type="datetime-local" id="t2_${t.id}" class="input-modern text-xs" value="${t.tgl_timbang_2 || ''}" ${disabledStr}></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-hashtag text-gray-300 mr-1.5"></i>Nomor FO</label><input type="text" id="fo_${t.id}" class="input-modern" value="${t.fo || ''}" ${disabledStr} placeholder="Kosong"></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-id-badge text-gray-300 mr-1.5"></i>Nama Supir</label><input type="text" id="nd_${t.id}" class="input-modern" value="${t.nama_driver || ''}"></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5"><i class="fas fa-mobile-alt text-gray-300 mr-1.5"></i>Kontak Supir</label><input type="text" id="nh_${t.id}" class="input-modern" value="${t.no_hp || ''}"></div></div><div class="flex flex-col sm:flex-row justify-between items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 mt-2"><div class="text-xs font-semibold text-gray-500 flex items-center bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm mb-3 sm:mb-0"><i class="fas fa-sync-alt text-blue-500 mr-2"></i> Update Data: ${upd}</div><div class="flex flex-wrap gap-3 w-full sm:w-auto justify-end"><button onclick="window.saveUpdateStatus('${t.id}')" class="btn-primary w-full sm:w-auto"><i class="fas fa-cloud-upload-alt"></i> Update Database</button><button id="btn_del_${t.id}" onclick="window.finishDelivery('${t.id}')" class="btn-success w-full sm:w-auto" ${disabledStr}><i class="fas fa-check-circle"></i> Selesai & Reset</button></div></div></div>`;
                 }
             });
         }
 
+        window.saveUpdateStatus = async (id) => { 
+            const st = document.getElementById(`st_${id}`).value; 
+            let dataUpdate = { status: st, nama_driver: document.getElementById(`nd_${id}`).value, no_hp: document.getElementById(`nh_${id}`).value, terakhir_update: Date.now() }; 
+            if(st.toLowerCase() !== 'tersedia') {
+                dataUpdate = { ...dataUpdate, dn: document.getElementById(`dn_${id}`).value, jenis_produk: document.getElementById(`jp_${id}`).value, daftar_dco: document.getElementById(`dc_${id}`).value, tgl_timbang_1: document.getElementById(`t1_${id}`).value, tgl_timbang_2: document.getElementById(`t2_${id}`).value, fo: document.getElementById(`fo_${id}`).value, no_container: document.getElementById(`nc_${id}`).value };
+            } else {
+                dataUpdate = { ...dataUpdate, dn: '', jenis_produk: '', daftar_dco: '', tgl_timbang_1: '', tgl_timbang_2: '', fo: '', no_container: '' };
+            }
+            await updateDoc(doc(db, "trucks", id), dataUpdate); Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Database Tersinkronisasi', showConfirmButton: false, timer: 1500}); 
+        };
+
+        window.finishDelivery = async (id) => { 
+            const t = trucksData.find(x => x.id === id); if(!t || (t.status||'').toLowerCase() === 'tersedia') return; 
+
+            // Grab realtime data from DOM forms to ensure we don't save empty/stale fields
+            const nd = document.getElementById(`nd_${id}`).value.trim();
+            const nh = document.getElementById(`nh_${id}`).value.trim();
+            const dn = document.getElementById(`dn_${id}`).value.trim();
+            const nc = document.getElementById(`nc_${id}`).value.trim();
+            const jp = document.getElementById(`jp_${id}`).value;
+            const dc = document.getElementById(`dc_${id}`).value;
+            const t1 = document.getElementById(`t1_${id}`).value;
+            const t2 = document.getElementById(`t2_${id}`).value;
+            const fo = document.getElementById(`fo_${id}`).value.trim();
+
+            if(!nd || !nh || !dn || !nc || !jp || !dc || !t1 || !t2 || !fo) {
+                return Swal.fire({icon: 'error', title: 'Data Belum Lengkap', text: 'Mohon lengkapi semua form (Nama Supir, Kontak, DN, Container, Produk, Waktu DCO, Timbang 1, Timbang 2, dan FO) sebelum Selesai Delivery.', confirmButtonColor: '#2563eb'});
+            }
+
+            const dcoDate = new Date(dc);
+            const t1Date = new Date(t1);
+            const t2Date = new Date(t2);
+
+            if(dcoDate > t1Date) return Swal.fire({icon: 'error', title: 'Urutan Waktu Salah', text: 'Tanggal Daftar DCO tidak boleh melebihi Tanggal Timbang 1.', confirmButtonColor: '#2563eb'});
+            if(t1Date > t2Date) return Swal.fire({icon: 'error', title: 'Urutan Waktu Salah', text: 'Tanggal Timbang 1 tidak boleh melebihi Tanggal Timbang 2.', confirmButtonColor: '#2563eb'});
+
+            Swal.fire({ title: 'Konfirmasi Selesai?', html: "Data truck akan <b>dikosongkan</b> dan dimasukkan ke Laporan Ritase.", icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonColor: '#cbd5e1', confirmButtonText: 'Selesaikan' }).then(async (res) => { 
+                if(res.isConfirmed) { 
+                    await addDoc(collection(db, "ritase"), { plat_nomor: t.plat_nomor, vendor: t.vendor, jenis_mobil: t.jenis_mobil, nama_driver: nd, no_hp: nh, dn: dn, no_container: nc, jenis_produk: jp, daftar_dco: dc, tgl_timbang_1: t1, tgl_timbang_2: t2, fo: fo, tgl_selesai: Date.now() }); 
+                    await updateDoc(doc(db, "trucks", id), { status: 'Tersedia', dn: '', jenis_produk: '', daftar_dco: '', tgl_timbang_1: '', tgl_timbang_2: '', fo: '', no_container: '', terakhir_update: Date.now() }); 
+                    Swal.fire({icon: 'success', title: 'Sukses', text: 'Delivery Selesai dicatat ke Ritase.', confirmButtonColor: '#2563eb'}); 
+                } 
+            }); 
+        };
+
         window.filterRitase = () => { renderRitaseTable(); };
         function renderRitaseTable() { 
+            const tbHead = document.querySelector('#table-ritase thead');
+            if(tbHead) {
+                let headHtml = `<tr><th class="whitespace-nowrap">Tgl Diselesaikan</th><th class="whitespace-nowrap">Nama Vendor</th><th class="whitespace-nowrap">Plat Nomor</th><th class="whitespace-nowrap">Jenis Mobil</th><th class="whitespace-nowrap">Nama Driver</th><th class="whitespace-nowrap">DN</th><th class="whitespace-nowrap">No Container</th><th class="whitespace-nowrap">Jenis Produk</th><th class="whitespace-nowrap">Waktu DCO</th><th class="whitespace-nowrap">Timbang 1</th><th class="whitespace-nowrap">Timbang 2</th><th class="whitespace-nowrap">Dokumen FO</th>`;
+                if (userRole === 'admin') headHtml += `<th class="whitespace-nowrap text-center">Aksi</th>`;
+                headHtml += `</tr>`;
+                tbHead.innerHTML = headHtml;
+            }
+
             const tb = document.querySelector('#table-ritase tbody'); if(!tb) return; tb.innerHTML = ''; 
             const searchVal = (document.getElementById('search-ritase')?.value || '').toLowerCase();
             const startVal = document.getElementById('filter-start-date')?.value;
@@ -2003,16 +2082,102 @@
                 const endObj = endVal ? new Date(endVal) : new Date(8640000000000000); endObj.setHours(23, 59, 59, 999);
                 filteredData = filteredData.filter(r => { const rDate = new Date(r.tgl_selesai); return rDate >= startObj && rDate <= endObj; });
             }
-            if (searchVal) filteredData = filteredData.filter(r => { return (r.plat_nomor || '').toLowerCase().includes(searchVal) || (r.vendor || '').toLowerCase().includes(searchVal) || (r.nama_driver || '').toLowerCase().includes(searchVal) || (r.no_container || '').toLowerCase().includes(searchVal) || (r.jenis_produk || '').toLowerCase().includes(searchVal) || (r.fo || '').toLowerCase().includes(searchVal) || (r.jenis_mobil || '').toLowerCase().includes(searchVal); });
+            if (searchVal) filteredData = filteredData.filter(r => { return (r.plat_nomor || '').toLowerCase().includes(searchVal) || (r.vendor || '').toLowerCase().includes(searchVal) || (r.nama_driver || '').toLowerCase().includes(searchVal) || (r.no_container || '').toLowerCase().includes(searchVal) || (r.jenis_produk || '').toLowerCase().includes(searchVal) || (r.fo || '').toLowerCase().includes(searchVal) || (r.jenis_mobil || '').toLowerCase().includes(searchVal) || (r.dn || '').toLowerCase().includes(searchVal); });
             filteredData.forEach(r => { 
                 const formatOptions = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'};
                 const tanggalSelesai = new Date(r.tgl_selesai).toLocaleString('id-ID', formatOptions);
                 const t1 = r.tgl_timbang_1 ? new Date(r.tgl_timbang_1).toLocaleString('id-ID', formatOptions) : '-';
                 const t2 = r.tgl_timbang_2 ? new Date(r.tgl_timbang_2).toLocaleString('id-ID', formatOptions) : '-';
-                tb.innerHTML += `<tr class="group hover:bg-emerald-50/30 transition-colors"><td class="font-bold text-emerald-600 text-xs whitespace-nowrap">${tanggalSelesai}</td><td class="font-bold text-gray-700 text-sm whitespace-nowrap">${r.vendor || '-'}</td><td class="font-extrabold text-blue-600 whitespace-nowrap">${r.plat_nomor || '-'}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.jenis_mobil || '-'}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.nama_driver || '-'}</td><td class="text-sm font-medium text-gray-600 whitespace-nowrap">${r.no_container || '-'}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.jenis_produk || '-'}</td><td class="text-xs text-gray-500 whitespace-nowrap">${r.daftar_dco || '-'}</td><td class="text-xs text-gray-500 whitespace-nowrap">${t1}</td><td class="text-xs text-gray-500 whitespace-nowrap">${t2}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.fo || '-'}</td></tr>`; 
+                
+                let actionTd = '';
+                if(userRole === 'admin') {
+                    actionTd = `<td class="text-center"><div class="flex items-center justify-center gap-2"><button onclick="window.editRitase('${r.id}')" class="w-8 h-8 rounded-lg bg-yellow-50 text-yellow-500 hover:bg-yellow-500 hover:text-white transition-colors" title="Edit Data"><i class="fas fa-pen"></i></button><button onclick="window.deleteRitase('${r.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Hapus Data"><i class="fas fa-trash"></i></button></div></td>`;
+                }
+
+                tb.innerHTML += `<tr class="group hover:bg-emerald-50/30 transition-colors"><td class="font-bold text-emerald-600 text-xs whitespace-nowrap">${tanggalSelesai}</td><td class="font-bold text-gray-700 text-sm whitespace-nowrap">${r.vendor || '-'}</td><td class="font-extrabold text-blue-600 whitespace-nowrap">${r.plat_nomor || '-'}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.jenis_mobil || '-'}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.nama_driver || '-'}</td><td class="text-sm font-medium text-gray-600 whitespace-nowrap">${r.dn || '-'}</td><td class="text-sm font-medium text-gray-600 whitespace-nowrap">${r.no_container || '-'}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.jenis_produk || '-'}</td><td class="text-xs text-gray-500 whitespace-nowrap">${r.daftar_dco || '-'}</td><td class="text-xs text-gray-500 whitespace-nowrap">${t1}</td><td class="text-xs text-gray-500 whitespace-nowrap">${t2}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.fo || '-'}</td>${actionTd}</tr>`; 
             }); 
-            if(filteredData.length === 0) tb.innerHTML = `<tr><td colspan="11" class="text-center py-6 text-gray-500 font-bold">Tidak ada data ritase yang sesuai pencarian/filter.</td></tr>`;
+            if(filteredData.length === 0) {
+                const colspan = userRole === 'admin' ? 13 : 12;
+                tb.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-6 text-gray-500 font-bold">Tidak ada data ritase yang sesuai pencarian/filter.</td></tr>`;
+            }
         }
+
+        window.editRitase = async (id) => {
+            const r = ritaseData.find(x => x.id === id);
+            if(!r) return;
+            const jOpts = masterJenisTruck.map(j => `<option value="${j.name}" ${r.jenis_mobil === j.name ? 'selected' : ''}>${j.name}</option>`).join('');
+            const pOpts = masterJenisProduk.map(p => `<option value="${p.name}" ${r.jenis_produk === p.name ? 'selected' : ''}>${p.name}</option>`).join('');
+
+            const dcVal = formatDateForInput(r.daftar_dco);
+            const t1Val = formatDateForInput(r.tgl_timbang_1);
+            const t2Val = formatDateForInput(r.tgl_timbang_2);
+
+            const { value: formValues } = await Swal.fire({
+                title: '<span style="font-size: 1.25rem; font-family: Poppins;">Edit Data Ritase</span>',
+                html: `
+                    <div style="text-align: left; font-family: Poppins; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div><label style="font-size:12px;font-weight:600;color:#64748b;">Plat Nomor</label><input id="sw-rit-plat" class="swal2-input" value="${r.plat_nomor}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"></div>
+                        <div><label style="font-size:12px;font-weight:600;color:#64748b;">Jenis Mobil</label><select id="sw-rit-jenis" class="swal2-input" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">${jOpts}</select></div>
+                        <div><label style="font-size:12px;font-weight:600;color:#64748b;">Nama Driver</label><input id="sw-rit-driver" class="swal2-input" value="${r.nama_driver || ''}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"></div>
+                        <div><label style="font-size:12px;font-weight:600;color:#64748b;">DN</label><input id="sw-rit-dn" class="swal2-input" value="${r.dn || ''}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"></div>
+                        <div><label style="font-size:12px;font-weight:600;color:#64748b;">No Container</label><input id="sw-rit-nc" class="swal2-input" value="${r.no_container || ''}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"></div>
+                        <div><label style="font-size:12px;font-weight:600;color:#64748b;">Jenis Produk</label><select id="sw-rit-jp" class="swal2-input" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">${pOpts}</select></div>
+                        <div><label style="font-size:12px;font-weight:600;color:#64748b;">Waktu DCO</label><input type="datetime-local" id="sw-rit-dc" class="swal2-input" value="${dcVal}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"></div>
+                        <div><label style="font-size:12px;font-weight:600;color:#64748b;">Timbang 1</label><input type="datetime-local" id="sw-rit-t1" class="swal2-input" value="${t1Val}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"></div>
+                        <div><label style="font-size:12px;font-weight:600;color:#64748b;">Timbang 2</label><input type="datetime-local" id="sw-rit-t2" class="swal2-input" value="${t2Val}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"></div>
+                        <div><label style="font-size:12px;font-weight:600;color:#64748b;">Nomor FO</label><input id="sw-rit-fo" class="swal2-input" value="${r.fo || ''}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"></div>
+                    </div>
+                `,
+                showCancelButton: true, confirmButtonColor: '#2563eb', cancelButtonColor: '#cbd5e1', width: '800px',
+                preConfirm: () => {
+                    const dc = document.getElementById('sw-rit-dc').value;
+                    const t1 = document.getElementById('sw-rit-t1').value;
+                    const t2 = document.getElementById('sw-rit-t2').value;
+
+                    const dcoDate = new Date(dc);
+                    const t1Date = new Date(t1);
+                    const t2Date = new Date(t2);
+
+                    if(dcoDate > t1Date) { Swal.showValidationMessage('Tanggal Daftar DCO tidak boleh melebihi Tanggal Timbang 1.'); return false; }
+                    if(t1Date > t2Date) { Swal.showValidationMessage('Tanggal Timbang 1 tidak boleh melebihi Tanggal Timbang 2.'); return false; }
+
+                    return {
+                        plat_nomor: document.getElementById('sw-rit-plat').value.toUpperCase(),
+                        jenis_mobil: document.getElementById('sw-rit-jenis').value,
+                        nama_driver: document.getElementById('sw-rit-driver').value.toUpperCase(),
+                        dn: document.getElementById('sw-rit-dn').value,
+                        no_container: document.getElementById('sw-rit-nc').value,
+                        jenis_produk: document.getElementById('sw-rit-jp').value,
+                        daftar_dco: dc,
+                        tgl_timbang_1: t1,
+                        tgl_timbang_2: t2,
+                        fo: document.getElementById('sw-rit-fo').value
+                    }
+                }
+            });
+
+            if(formValues) {
+                await updateDoc(doc(db, "ritase", id), formValues);
+                Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Data Diperbarui', showConfirmButton: false, timer: 1500});
+            }
+        };
+
+        window.deleteRitase = async (id) => {
+            Swal.fire({ 
+                title: 'Hapus Riwayat Ritase?', 
+                html: "Tindakan ini bersifat permanen dan akan menghapus laporan terkait.", 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#ef4444', 
+                cancelButtonColor: '#cbd5e1', 
+                confirmButtonText: 'Ya, Hapus' 
+            }).then(async (r) => { 
+                if(r.isConfirmed) {
+                    await deleteDoc(doc(db, "ritase", id));
+                    Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Data Ritase Dihapus', showConfirmButton: false, timer: 1500});
+                }
+            }); 
+        };
 
         window.addJenisProduk = async () => { const val = document.getElementById('new-jenis-produk-name').value.trim(); if(!val) return; await addDoc(collection(db, "master_jenis_produk"), { name: val, createdAt: Date.now() }); document.getElementById('new-jenis-produk-name').value = ''; Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Tersimpan', showConfirmButton: false, timer: 1000}); };
         window.editJenisProduk = async (id, oldName) => { const { value: newName } = await Swal.fire({ title: 'Edit Jenis Produk', input: 'text', inputValue: oldName, showCancelButton: true, confirmButtonColor: '#2563eb' }); if(newName && newName.trim() !== oldName) await updateDoc(doc(db, "master_jenis_produk", id), { name: newName.trim() }); };
@@ -2029,7 +2194,7 @@
         };
         window.editTruck = async (id) => { 
             const t = trucksData.find(x => x.id === id); const jOpts = masterJenisTruck.map(j => `<option value="${j.name}" ${t.jenis_mobil === j.name ? 'selected' : ''}>${j.name}</option>`).join(''); 
-            const { value: formValues } = await Swal.fire({ title: '<span style="font-size: 1.25rem; font-family: Poppins;">Edit Data Truck</span>', html: `<div style="text-align: left; font-family: Poppins;"><label style="font-size: 12px; font-weight: 600; color: #64748b;">Plat Nomor</label><input id="sw-plat" class="swal2-input" value="${t.plat_nomor}" style="margin-top: 5px; border-radius: 8px; font-size: 14px;"><label style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 15px; display: block;">Jenis Mobil</label><select id="sw-jen" class="swal2-input" style="margin-top: 5px; border-radius: 8px; font-size: 14px;">${jOpts}</select><label style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 15px; display: block;">Nama Driver</label><input id="sw-drv" class="swal2-input" value="${t.nama_driver}" style="margin-top: 5px; border-radius: 8px; font-size: 14px;"><label style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 15px; display: block;">No HP</label><input id="sw-hp" class="swal2-input" value="${t.no_hp}" style="margin-top: 5px; border-radius: 8px; font-size: 14px;"></div>`, showCancelButton: true, confirmButtonColor: '#2563eb', cancelButtonColor: '#cbd5e1', preConfirm: () => { return { plat_nomor: document.getElementById('sw-plat').value.toUpperCase(), jenis_mobil: document.getElementById('sw-jen').value, nama_driver: document.getElementById('sw-drv').value.toUpperCase(), no_hp: document.getElementById('sw-hp').value }; } }); 
+            const { value: formValues } = await Swal.fire({ title: '<span style="font-size: 1.25rem; font-family: Poppins;">Edit Data Truck</span>', html: `<div style="text-align: left; font-family: Poppins;"><label style="font-size: 12px; font-weight: 600; color: #64748b;">Plat Nomor</label><input id="sw-plat" class="swal2-input" value="${t.plat_nomor}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"><label style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 15px; display: block;">Jenis Mobil</label><select id="sw-jen" class="swal2-input" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">${jOpts}</select><label style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 15px; display: block;">Nama Driver</label><input id="sw-drv" class="swal2-input" value="${t.nama_driver}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"><label style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 15px; display: block;">No HP</label><input id="sw-hp" class="swal2-input" value="${t.no_hp}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;"></div>`, showCancelButton: true, confirmButtonColor: '#2563eb', cancelButtonColor: '#cbd5e1', preConfirm: () => { return { plat_nomor: document.getElementById('sw-plat').value.toUpperCase(), jenis_mobil: document.getElementById('sw-jen').value, nama_driver: document.getElementById('sw-drv').value.toUpperCase(), no_hp: document.getElementById('sw-hp').value }; } }); 
             if(formValues) { await updateDoc(doc(db, "trucks", id), formValues); Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Data Diperbarui', showConfirmButton: false, timer: 1500}); } 
         };
         window.deleteTruck = async (id) => { if(confirm("Tindakan ini tidak bisa dibatalkan. Hapus Truck?")) await deleteDoc(doc(db, "trucks", id)); };
@@ -2038,24 +2203,6 @@
         window.editStatus = async (id, oldName) => { const { value: newName } = await Swal.fire({ title: 'Edit Status', input: 'text', inputValue: oldName, showCancelButton: true, confirmButtonColor: '#2563eb' }); if(newName && newName.trim() !== oldName) { await updateDoc(doc(db, "master_statuses", id), { name: newName.trim() }); const snap = await getDocs(query(collection(db, "trucks"), where("status", "==", oldName))); snap.forEach(d => { updateDoc(doc(db, "trucks", d.id), { status: newName.trim() }); }); } };
         window.deleteStatus = async (id) => { if(confirm("Yakin ingin menghapus status ini dari Master Data?")) await deleteDoc(doc(db, "master_statuses", id)); };
         
-        window.saveUpdateStatus = async (id) => { 
-            const st = document.getElementById(`st_${id}`).value; 
-            let dataUpdate = { status: st, nama_driver: document.getElementById(`nd_${id}`).value, no_hp: document.getElementById(`nh_${id}`).value, terakhir_update: Date.now() }; 
-            if(st.toLowerCase() !== 'tersedia') dataUpdate = { ...dataUpdate, jenis_produk: document.getElementById(`jp_${id}`).value, daftar_dco: document.getElementById(`dc_${id}`).value, tgl_timbang_1: document.getElementById(`t1_${id}`).value, tgl_timbang_2: document.getElementById(`t2_${id}`).value, fo: document.getElementById(`fo_${id}`).value, no_container: document.getElementById(`nc_${id}`).value };
-            else dataUpdate = { ...dataUpdate, jenis_produk: '', daftar_dco: '', tgl_timbang_1: '', tgl_timbang_2: '', fo: '', no_container: '' };
-            await updateDoc(doc(db, "trucks", id), dataUpdate); Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Database Tersinkronisasi', showConfirmButton: false, timer: 1500}); 
-        };
-        
-        window.finishDelivery = async (id) => { 
-            const t = trucksData.find(x => x.id === id); if(!t || (t.status||'').toLowerCase() === 'tersedia') return; 
-            Swal.fire({ title: 'Konfirmasi Selesai?', html: "Data truck akan <b>dikosongkan</b> dan dimasukkan ke Laporan Ritase.", icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonColor: '#cbd5e1', confirmButtonText: 'Selesaikan' }).then(async (res) => { 
-                if(res.isConfirmed) { 
-                    await addDoc(collection(db, "ritase"), { plat_nomor: t.plat_nomor, vendor: t.vendor, jenis_mobil: t.jenis_mobil, nama_driver: t.nama_driver, no_hp: t.no_hp, no_container: t.no_container, jenis_produk: t.jenis_produk, daftar_dco: t.daftar_dco, tgl_timbang_1: t.tgl_timbang_1, tgl_timbang_2: t.tgl_timbang_2, fo: t.fo, tgl_selesai: Date.now() }); 
-                    await updateDoc(doc(db, "trucks", id), { status: 'Tersedia', jenis_produk: '', daftar_dco: '', tgl_timbang_1: '', tgl_timbang_2: '', fo: '', no_container: '', terakhir_update: Date.now() }); 
-                    Swal.fire({icon: 'success', title: 'Sukses', text: 'Delivery Selesai dicatat ke Ritase.', confirmButtonColor: '#2563eb'}); 
-                } 
-            }); 
-        };
         window.exportExcel = (id, fn) => { const htmlTable = document.getElementById(id); const workbook = XLSX.utils.table_to_book(htmlTable, {sheet: "Data"}); XLSX.writeFile(workbook, `${fn}_${new Date().getTime()}.xlsx`); };
         window.exportImage = (id, fn) => { const element = document.getElementById(id); html2canvas(element, {scale: 2, backgroundColor: '#ffffff'}).then(canvas => { let link = document.createElement('a'); link.download = `${fn}_${new Date().getTime()}.png`; link.href = canvas.toDataURL("image/png", 1.0); link.click(); }); };
     </script>
