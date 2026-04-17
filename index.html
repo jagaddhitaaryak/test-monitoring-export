@@ -1167,10 +1167,14 @@
                 if(userRole === 'emkl') renderUpdateStatusCards();
             });
 
-            onSnapshot(collection(db, "users"), (snap) => {
-                masterAkun = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                if(userRole === 'admin') renderAkunTable();
-            });
+            // --- BAGIAN YANG DIPERBAIKI (Hanya Admin yang meload tabel Users) ---
+            if (userRole === 'admin') {
+                onSnapshot(collection(db, "users"), (snap) => {
+                    masterAkun = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    renderAkunTable();
+                });
+            }
+            // -------------------------------------------------------------------
 
             onSnapshot(collection(db, "master_statuses"), (snap) => { 
                 let rawData = snap.docs.map(d => ({id: d.id, ...d.data()}));
@@ -1963,6 +1967,114 @@
                 targetTbody.innerHTML += rowHtml;
             });
         }
+        
+        // ==========================================
+        // FUNGSI MANAJEMEN TRUCK (EMKL & ADMIN)
+        // ==========================================
+        window.addTruckEMKL = async () => {
+            const plat = document.getElementById('new-truck-plat').value.trim().toUpperCase();
+            const jenis = document.getElementById('new-truck-jenis').value;
+            const driver = document.getElementById('new-truck-driver').value.trim().toUpperCase();
+            const hp = document.getElementById('new-truck-hp').value.trim();
+
+            if (!plat || !jenis || !driver || !hp) {
+                return Swal.fire({icon: 'error', title: 'Data Tidak Lengkap', text: 'Mohon isi semua kolom (Plat, Jenis, Driver, Kontak)!', confirmButtonColor: '#2563eb'});
+            }
+
+            Swal.fire({ title: 'Menyimpan Data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+            try {
+                await addDoc(collection(db, "trucks"), {
+                    plat_nomor: plat,
+                    jenis_mobil: jenis,
+                    nama_driver: driver,
+                    no_hp: hp,
+                    vendor: vendorName, // Otomatis sesuai nama vendor yang sedang login
+                    status: 'Tersedia', // Status default
+                    dn: '', no_container: '', jenis_produk: '', daftar_dco: '', 
+                    tgl_timbang_1: '', tgl_timbang_2: '', fo: '',
+                    terakhir_update: Date.now(),
+                    createdAt: Date.now()
+                });
+
+                // Kosongkan form input setelah berhasil
+                document.getElementById('new-truck-plat').value = '';
+                document.getElementById('new-truck-jenis').value = '';
+                document.getElementById('new-truck-driver').value = '';
+                document.getElementById('new-truck-hp').value = '';
+
+                Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Truck Berhasil Ditambahkan', showConfirmButton: false, timer: 1500});
+            } catch (error) {
+                Swal.fire({icon: 'error', title: 'Gagal Menyimpan', text: error.message, confirmButtonColor: '#ef4444'});
+            }
+        };
+
+        window.editTruck = async (id) => {
+            const t = trucksData.find(x => x.id === id);
+            if (!t) return;
+
+            const jOpts = masterJenisTruck.map(j => `<option value="${j.name}" ${t.jenis_mobil === j.name ? 'selected' : ''}>${j.name}</option>`).join('');
+
+            const { value: formValues } = await Swal.fire({
+                title: '<span style="font-size: 1.25rem; font-family: Poppins;">Edit Data Truck</span>',
+                html: `
+                    <div style="text-align: left; font-family: Poppins;">
+                        <label style="font-size:12px;font-weight:600;color:#64748b;">Plat Nomor</label>
+                        <input id="sw-truck-plat" class="swal2-input" value="${t.plat_nomor}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">
+                        
+                        <label style="font-size:12px;font-weight:600;color:#64748b; margin-top: 10px; display: block;">Jenis Mobil</label>
+                        <select id="sw-truck-jenis" class="swal2-input" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">
+                            ${jOpts}
+                        </select>
+                        
+                        <label style="font-size:12px;font-weight:600;color:#64748b; margin-top: 10px; display: block;">Nama Driver</label>
+                        <input id="sw-truck-driver" class="swal2-input" value="${t.nama_driver || ''}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">
+                        
+                        <label style="font-size:12px;font-weight:600;color:#64748b; margin-top: 10px; display: block;">No Handphone</label>
+                        <input id="sw-truck-hp" class="swal2-input" value="${t.no_hp || ''}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">
+                    </div>
+                `,
+                showCancelButton: true, confirmButtonColor: '#2563eb', cancelButtonColor: '#cbd5e1',
+                preConfirm: () => {
+                    return {
+                        plat_nomor: document.getElementById('sw-truck-plat').value.trim().toUpperCase(),
+                        jenis_mobil: document.getElementById('sw-truck-jenis').value,
+                        nama_driver: document.getElementById('sw-truck-driver').value.trim().toUpperCase(),
+                        no_hp: document.getElementById('sw-truck-hp').value.trim()
+                    }
+                }
+            });
+
+            if (formValues) {
+                try {
+                    await updateDoc(doc(db, "trucks", id), formValues);
+                    Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Data Truck Diperbarui', showConfirmButton: false, timer: 1500});
+                } catch (error) {
+                    Swal.fire({icon: 'error', title: 'Gagal Update', text: error.message, confirmButtonColor: '#ef4444'});
+                }
+            }
+        };
+
+        window.deleteTruck = async (id) => {
+            Swal.fire({ 
+                title: 'Hapus Data Truck?', 
+                html: "Data truck ini akan dihapus secara permanen dari sistem.", 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#ef4444', 
+                cancelButtonColor: '#cbd5e1', 
+                confirmButtonText: 'Ya, Hapus' 
+            }).then(async (r) => { 
+                if(r.isConfirmed) {
+                    try {
+                        await deleteDoc(doc(db, "trucks", id));
+                        Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Data Dihapus', showConfirmButton: false, timer: 1500});
+                    } catch (error) {
+                        Swal.fire({icon: 'error', title: 'Gagal Hapus', text: error.message, confirmButtonColor: '#ef4444'});
+                    }
+                }
+            }); 
+        };
 
         function renderJenisTruckTable() { const tb = document.querySelector('#table-master-jenis-truck tbody'); tb.innerHTML = ''; masterJenisTruck.forEach(j => { tb.innerHTML += `<tr class="group"><td class="font-bold text-gray-700"><i class="fas fa-truck-moving text-gray-300 mr-3"></i>${j.name}</td><td class="text-center"><button onclick="window.editJenisTruck('${j.id}', '${j.name}')" class="w-8 h-8 rounded-lg bg-yellow-50 text-yellow-500 hover:bg-yellow-500 hover:text-white transition-colors mr-2"><i class="fas fa-pen"></i></button><button onclick="window.deleteJenisTruck('${j.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-trash"></i></button></td></tr>`; }); }
         
