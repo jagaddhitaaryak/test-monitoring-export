@@ -1469,7 +1469,13 @@
             const isTersedia = selectedStatus.toLowerCase() === 'tersedia';
             ['adm_dn_', 'adm_nc_', 'adm_jp_', 'adm_dc_', 'adm_t1_', 'adm_t2_', 'adm_fo_'].forEach(prefix => { 
                 const el = document.getElementById(prefix + id); 
-                if (el) el.disabled = isTersedia; 
+                if (el) {
+                    el.disabled = isTersedia; 
+                    // Perintah tambahan untuk membuka kunci kalender Flatpickr
+                    if (el._flatpickr && el._flatpickr.altInput) {
+                        el._flatpickr.altInput.disabled = isTersedia;
+                    }
+                }
             });
             const btnDel = document.getElementById('adm_btn_del_' + id); 
             if(btnDel) { 
@@ -2191,8 +2197,22 @@
 
         window.toggleFormFields = (id, selectedStatus) => {
             const isTersedia = selectedStatus.toLowerCase() === 'tersedia';
-            ['nc_', 'jp_', 'dc_', 't1_', 't2_', 'fo_', 'dn_'].forEach(prefix => { const el = document.getElementById(prefix + id); if (el) el.disabled = isTersedia; });
-            const btnDel = document.getElementById('btn_del_' + id); if(btnDel) { btnDel.disabled = isTersedia; if(isTersedia) { btnDel.style.opacity = '0.5'; btnDel.style.cursor = 'not-allowed'; } else { btnDel.style.opacity = '1'; btnDel.style.cursor = 'pointer'; } }
+            ['nc_', 'jp_', 'dc_', 't1_', 't2_', 'fo_', 'dn_'].forEach(prefix => { 
+                const el = document.getElementById(prefix + id); 
+                if (el) {
+                    el.disabled = isTersedia; 
+                    // Perintah tambahan untuk membuka kunci kalender Flatpickr
+                    if (el._flatpickr && el._flatpickr.altInput) {
+                        el._flatpickr.altInput.disabled = isTersedia;
+                    }
+                }
+            });
+            const btnDel = document.getElementById('btn_del_' + id); 
+            if(btnDel) { 
+                btnDel.disabled = isTersedia; 
+                if(isTersedia) { btnDel.style.opacity = '0.5'; btnDel.style.cursor = 'not-allowed'; } 
+                else { btnDel.style.opacity = '1'; btnDel.style.cursor = 'pointer'; } 
+            }
         };
 
         window.renderUpdateStatusCards = () => { renderUpdateStatusCards(); };
