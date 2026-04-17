@@ -2106,6 +2106,8 @@
             const btnDel = document.getElementById('btn_del_' + id); if(btnDel) { btnDel.disabled = isTersedia; if(isTersedia) { btnDel.style.opacity = '0.5'; btnDel.style.cursor = 'not-allowed'; } else { btnDel.style.opacity = '1'; btnDel.style.cursor = 'pointer'; } }
         };
 
+        window.renderUpdateStatusCards = () => { renderUpdateStatusCards(); };
+
         function renderUpdateStatusCards() {
             const container = document.getElementById('update-status-container'); 
             const tbSummary = document.querySelector('#table-summary tbody'); 
@@ -2318,6 +2320,61 @@
 
         window.exportExcel = (id, fn) => { const htmlTable = document.getElementById(id); const workbook = XLSX.utils.table_to_book(htmlTable, {sheet: "Data"}); XLSX.writeFile(workbook, `${fn}_${new Date().getTime()}.xlsx`); };
         window.exportImage = (id, fn) => { const element = document.getElementById(id); html2canvas(element, {scale: 2, backgroundColor: '#ffffff'}).then(canvas => { let link = document.createElement('a'); link.download = `${fn}_${new Date().getTime()}.png`; link.href = canvas.toDataURL("image/png", 1.0); link.click(); }); };
+
+        // ==========================================
+        // FUNGSI KONFIGURASI MASTER JENIS TRUCK
+        // ==========================================
+        window.addJenisTruck = async () => {
+            const val = document.getElementById('new-jenis-truck-name').value.trim();
+            if(!val) return;
+            await addDoc(collection(db, "master_jenis_truck"), { name: val, createdAt: Date.now() });
+            document.getElementById('new-jenis-truck-name').value = '';
+            Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Tersimpan', showConfirmButton: false, timer: 1000});
+        };
+
+        window.editJenisTruck = async (id, oldName) => {
+            const { value: newName } = await Swal.fire({ 
+                title: 'Edit Jenis Truck', input: 'text', inputValue: oldName, 
+                showCancelButton: true, confirmButtonColor: '#2563eb' 
+            });
+            if(newName && newName.trim() !== oldName) {
+                await updateDoc(doc(db, "master_jenis_truck", id), { name: newName.trim() });
+            }
+        };
+
+        window.deleteJenisTruck = async (id) => {
+            if(confirm("Yakin ingin menghapus data ini?")) {
+                await deleteDoc(doc(db, "master_jenis_truck", id));
+            }
+        };
+
+        // ==========================================
+        // FUNGSI KONFIGURASI MASTER STATUS
+        // ==========================================
+        window.addStatus = async () => {
+            const val = document.getElementById('new-status-name').value.trim();
+            if(!val) return;
+            const newOrder = masterStatuses.length > 0 ? masterStatuses[masterStatuses.length - 1].order + 1 : 0;
+            await addDoc(collection(db, "master_statuses"), { name: val, createdAt: Date.now(), order: newOrder });
+            document.getElementById('new-status-name').value = '';
+            Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Tersimpan', showConfirmButton: false, timer: 1000});
+        };
+
+        window.editStatus = async (id, oldName) => {
+            const { value: newName } = await Swal.fire({ 
+                title: 'Edit Status', input: 'text', inputValue: oldName, 
+                showCancelButton: true, confirmButtonColor: '#2563eb' 
+            });
+            if(newName && newName.trim() !== oldName) {
+                await updateDoc(doc(db, "master_statuses", id), { name: newName.trim() });
+            }
+        };
+
+        window.deleteStatus = async (id) => {
+            if(confirm("Yakin menghapus status ini?")) {
+                await deleteDoc(doc(db, "master_statuses", id));
+            }
+        };
     </script>
 </body>
 </html>
