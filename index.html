@@ -435,6 +435,17 @@
             </div>
             
             <div class="p-8 overflow-y-auto flex-1 bg-gray-50">
+                <div id="modal-action-bar" class="flex flex-wrap justify-between items-center mb-4 hidden gap-4">
+                    <div class="flex items-center gap-3">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Filter EMKL:</label>
+                        <select id="modal-filter-vendor" class="input-modern py-2 px-3 text-sm w-48 shadow-sm border-gray-200" onchange="window.renderModalTable()">
+                            <option value="ALL">-- Semua Vendor --</option>
+                        </select>
+                    </div>
+                    <button onclick="window.exportExcel('modal-table', 'Detail_Armada_Modal')" class="btn-success py-2 px-4 shadow-sm text-sm">
+                        <i class="fas fa-file-excel mr-2"></i> Export Data Excel
+                    </button>
+                </div>
                 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                     <table class="table-modern w-full" id="modal-table">
                         <thead id="modal-table-head">
@@ -607,6 +618,9 @@
                             <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                                 <select id="admin-filter-emkl-update" class="input-modern py-2.5 px-4 text-sm w-full sm:w-48 shadow-sm font-semibold text-gray-700 cursor-pointer border-gray-200" onchange="window.renderAdminUpdateStatusCards()">
                                     <option value="ALL">-- Semua Vendor --</option>
+                                </select>
+                                <select id="admin-filter-status-update" class="input-modern py-2.5 px-4 text-sm w-full sm:w-48 shadow-sm font-semibold text-gray-700 cursor-pointer border-gray-200" onchange="window.renderAdminUpdateStatusCards()">
+                                    <option value="ALL">-- Semua Status --</option>
                                 </select>
                                 <div class="input-icon-wrapper w-full sm:w-64">
                                     <i class="fas fa-search text-gray-400"></i>
@@ -1489,8 +1503,15 @@
             if(userRole !== 'admin') return;
             const container = document.getElementById('admin-update-status-list');
             if(!container) return;
+            
             const filterEmklEl = document.getElementById('admin-filter-emkl-update');
             const filterEmkl = filterEmklEl ? filterEmklEl.value : 'ALL';
+            
+            // --- VARIABEL FILTER STATUS BARU ---
+            const filterStatusEl = document.getElementById('admin-filter-status-update');
+            const filterStatus = filterStatusEl ? filterStatusEl.value : 'ALL';
+            // -----------------------------------
+            
             const searchVal = (document.getElementById('admin-search-update')?.value || '').toLowerCase();
 
             if(filterEmklEl && filterEmklEl.options.length <= 1) {
@@ -1500,10 +1521,29 @@
                 filterEmklEl.innerHTML = vendorHtml;
             }
 
+            // --- ISI DROPDOWN STATUS BARU ---
+            if(filterStatusEl && filterStatusEl.options.length <= 1) {
+                let statusHtml = `<option value="ALL">-- Semua Status --</option>`;
+                STATUS_OPTIONS.forEach(s => { statusHtml += `<option value="${s}" ${s === filterStatus ? 'selected' : ''}>${s}</option>`; });
+                filterStatusEl.innerHTML = statusHtml;
+            }
+            // --------------------------------
+
             const statusOpts = STATUS_OPTIONS.map(s => `<option value="${s}">${s}</option>`).join('');
             container.innerHTML = '';
+            
             let filteredData = trucksData;
-            if(filterEmkl !== 'ALL') filteredData = filteredData.filter(t => t.vendor === filterEmkl);
+            
+            if(filterEmkl !== 'ALL') {
+                filteredData = filteredData.filter(t => t.vendor === filterEmkl);
+            }
+            
+            // --- LOGIKA FILTER STATUS ---
+            if(filterStatus !== 'ALL') {
+                filteredData = filteredData.filter(t => (t.status || '').toLowerCase() === filterStatus.toLowerCase());
+            }
+            // ----------------------------
+            
             if(searchVal) {
                 filteredData = filteredData.filter(t => (t.plat_nomor||'').toLowerCase().includes(searchVal) || (t.nama_driver||'').toLowerCase().includes(searchVal) || (t.vendor||'').toLowerCase().includes(searchVal));
             }
@@ -1856,19 +1896,96 @@
             });
         };
 
+        window.currentModalType = ''; // Menyimpan tipe modal yang sedang dibuka
+
         window.openDetailModal = (type) => {
+            window.currentModalType = type;
             const modal = document.getElementById('detail-modal');
-            const tbody = document.getElementById('modal-table-body');
             const title = document.getElementById('modal-title');
             const subtitle = document.getElementById('modal-subtitle');
             const iconContainer = document.getElementById('modal-icon-container');
             const icon = document.getElementById('modal-icon');
             
+            iconContainer.style.backgroundColor = '';
+            iconContainer.style.backgroundImage = '';
+
+            if(type === 'total') {
+                title.innerText = 'TOTAL ARMADA TERDAFTAR'; subtitle.innerText = 'Daftar keseluruhan unit operasional.';
+                icon.className = 'fas fa-truck text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-blue-600';
+            } else if(type === 'alokasi') {
+                title.innerText = 'ARMADA DALAM TUGAS (ALOKASI)'; subtitle.innerText = 'Daftar armada yang sedang memiliki rute aktif.';
+                icon.className = 'fas fa-cogs text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-green-600';
+            } else if(type === 'belum') {
+                title.innerText = 'ARMADA STANDBY (TERSEDIA)'; subtitle.innerText = 'Daftar armada yang menunggu alokasi tugas.';
+                icon.className = 'fas fa-clock text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-orange-500';
+            } else if(type === 'vendor_total') {
+                title.innerText = 'SELURUH PENGELOLA VENDOR'; subtitle.innerText = 'Daftar armada berdasarkan induk pengelola.';
+                icon.className = 'fas fa-building text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-purple-600';
+            } else if (type.startsWith('vendor_')) {
+                const vName = type.replace('vendor_', ''); title.innerText = `ARMADA PENGELOLA: ${vName}`; subtitle.innerText = `Rincian unit di bawah naungan ${vName}.`;
+                icon.className = 'fas fa-industry text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg'; iconContainer.style.backgroundColor = '#7c3aed'; 
+            } else if (type.startsWith('status_')) {
+                const statName = type.replace('status_', ''); 
+                title.innerText = `KATEGORI STATUS: ${statName.toUpperCase()}`; subtitle.innerText = `Daftar unit dengan status aktif ${statName.toUpperCase()}.`;
+                icon.className = getStatusIcon(statName) + ' text-xl md:text-3xl'; let sColor = getStatusStyle(statName);
+                iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg'; iconContainer.style.backgroundColor = sColor.icon;
+            }
+
+            // Mempersiapkan dropdown filter khusus untuk Admin
+            const actionBar = document.getElementById('modal-action-bar');
+            const filterSelect = document.getElementById('modal-filter-vendor');
+            if (userRole === 'admin') {
+                if (actionBar) actionBar.classList.remove('hidden');
+                if (filterSelect) {
+                    const uniqueVendors = [...new Set(trucksData.map(t => t.vendor).filter(Boolean))].sort();
+                    let vendorHtml = `<option value="ALL">-- Semua Vendor --</option>`;
+                    uniqueVendors.forEach(v => { vendorHtml += `<option value="${v}">${v}</option>`; });
+                    filterSelect.innerHTML = vendorHtml;
+                    filterSelect.value = 'ALL'; // Reset filter saat modal baru dibuka
+                }
+            } else {
+                if (actionBar) actionBar.classList.add('hidden'); // Sembunyikan filter untuk akun non-admin
+            }
+
+            // Panggil fungsi render isi tabel
+            window.renderModalTable();
+
+            modal.classList.remove('hidden'); setTimeout(() => { modal.classList.add('show'); }, 10);
+        };
+
+        window.renderModalTable = () => {
+            const type = window.currentModalType;
+            const tbody = document.getElementById('modal-table-body');
+            const thead = document.getElementById('modal-table-head');
+            const filterSelect = document.getElementById('modal-filter-vendor');
+            const selectedVendor = filterSelect ? filterSelect.value : 'ALL';
+
             let filteredData = [];
             let isDCO = type.toLowerCase() === 'status_daftar dco';
             let isOtwMill = type.toLowerCase() === 'status_otw mill';
-            
-            const thead = document.getElementById('modal-table-head');
+
+            // 1. Ekstrak Data Sesuai Kartu yang Diklik
+            if(type === 'total') {
+                filteredData = trucksData; 
+            } else if(type === 'alokasi') {
+                filteredData = trucksData.filter(t => (t.status||'').toLowerCase() !== 'tersedia'); 
+            } else if(type === 'belum') {
+                filteredData = trucksData.filter(t => (t.status||'').toLowerCase() === 'tersedia'); 
+            } else if(type === 'vendor_total') {
+                filteredData = [...trucksData].sort((a,b) => (a.vendor||'').localeCompare(b.vendor||'')); 
+            } else if (type.startsWith('vendor_')) {
+                const vName = type.replace('vendor_', ''); filteredData = trucksData.filter(t => t.vendor === vName); 
+            } else if (type.startsWith('status_')) {
+                const statName = type.replace('status_', ''); 
+                filteredData = trucksData.filter(t => (t.status||'').toLowerCase() === statName.toLowerCase());
+            }
+
+            // 2. Terapkan Filter Vendor (Jika Admin & Memilih Dropdown)
+            if (userRole === 'admin' && selectedVendor !== 'ALL') {
+                filteredData = filteredData.filter(t => t.vendor === selectedVendor);
+            }
+
+            // Sesuaikan Judul Header Tabel
             if (thead) {
                 if (isDCO) {
                     thead.innerHTML = `<tr><th class="w-10 text-center">#</th><th>Vendor Pengelola</th><th>Plat Nomor</th><th>Jenis Kendaraan</th><th>Nama Pengemudi</th><th>Status Terkini</th><th>DN</th><th>Tgl Tiba Di IKK</th><th>Lead Time</th></tr>`;
@@ -1879,32 +1996,6 @@
                 }
             }
 
-            iconContainer.style.backgroundColor = '';
-            iconContainer.style.backgroundImage = '';
-
-            if(type === 'total') {
-                filteredData = trucksData; title.innerText = 'TOTAL ARMADA TERDAFTAR'; subtitle.innerText = 'Daftar keseluruhan unit operasional.';
-                icon.className = 'fas fa-truck text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-blue-600';
-            } else if(type === 'alokasi') {
-                filteredData = trucksData.filter(t => (t.status||'').toLowerCase() !== 'tersedia'); title.innerText = 'ARMADA DALAM TUGAS (ALOKASI)'; subtitle.innerText = 'Daftar armada yang sedang memiliki rute aktif.';
-                icon.className = 'fas fa-cogs text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-green-600';
-            } else if(type === 'belum') {
-                filteredData = trucksData.filter(t => (t.status||'').toLowerCase() === 'tersedia'); title.innerText = 'ARMADA STANDBY (TERSEDIA)'; subtitle.innerText = 'Daftar armada yang menunggu alokasi tugas.';
-                icon.className = 'fas fa-clock text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-orange-500';
-            } else if(type === 'vendor_total') {
-                filteredData = [...trucksData].sort((a,b) => (a.vendor||'').localeCompare(b.vendor||'')); title.innerText = 'SELURUH PENGELOLA VENDOR'; subtitle.innerText = 'Daftar armada berdasarkan induk pengelola.';
-                icon.className = 'fas fa-building text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-purple-600';
-            } else if (type.startsWith('vendor_')) {
-                const vName = type.replace('vendor_', ''); filteredData = trucksData.filter(t => t.vendor === vName); title.innerText = `ARMADA PENGELOLA: ${vName}`; subtitle.innerText = `Rincian unit di bawah naungan ${vName}.`;
-                icon.className = 'fas fa-industry text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg'; iconContainer.style.backgroundColor = '#7c3aed'; 
-            } else if (type.startsWith('status_')) {
-                const statName = type.replace('status_', ''); 
-                filteredData = trucksData.filter(t => (t.status||'').toLowerCase() === statName.toLowerCase());
-                title.innerText = `KATEGORI STATUS: ${statName.toUpperCase()}`; subtitle.innerText = `Daftar unit dengan status aktif ${statName.toUpperCase()}.`;
-                icon.className = getStatusIcon(statName) + ' text-xl md:text-3xl'; let sColor = getStatusStyle(statName);
-                iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg'; iconContainer.style.backgroundColor = sColor.icon;
-            }
-            
             tbody.innerHTML = '';
             if(filteredData.length === 0) {
                 let colspan = (isDCO || isOtwMill) ? 9 : 7;
@@ -1925,7 +2016,7 @@
                         if (t.daftar_dco) {
                             let dcoDate = new Date(t.daftar_dco);
                             if (!isNaN(dcoDate)) {
-                                const formatOptions = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'};
+                                const formatOptions = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: false};
                                 tglDcoText = dcoDate.toLocaleString('id-ID', formatOptions);
                                 
                                 let startTime = dcoDate.getTime();
@@ -1950,7 +2041,7 @@
                         const lastRitase = ritaseData.find(r => r.plat_nomor === t.plat_nomor);
                         if (lastRitase && lastRitase.tgl_selesai) {
                             const selesaiDate = new Date(lastRitase.tgl_selesai);
-                            const formatOptions = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'};
+                            const formatOptions = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: false};
                             tglSelesaiText = selesaiDate.toLocaleString('id-ID', formatOptions);
 
                             let diffMs = Date.now() - lastRitase.tgl_selesai;
@@ -1981,7 +2072,6 @@
                     </tr>`;
                 });
             }
-            modal.classList.remove('hidden'); setTimeout(() => { modal.classList.add('show'); }, 10);
         };
 
         window.closeModal = () => { const modal = document.getElementById('detail-modal'); modal.classList.remove('show'); setTimeout(() => { modal.classList.add('hidden'); }, 300); };
