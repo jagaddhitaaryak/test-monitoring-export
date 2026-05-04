@@ -446,7 +446,7 @@
                         <i class="fas fa-file-excel mr-2"></i> Export Data Excel
                     </button>
                 </div>
-                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto shadow-sm">
                     <table class="table-modern w-full" id="modal-table">
                         <thead id="modal-table-head">
                             <tr>
@@ -529,6 +529,10 @@
                     <a href="#" class="sidebar-link" onclick="window.switchTab('admin-master-jenis-produk', this)"><i class="fas fa-box"></i> Master Jenis Produk</a>
                     <a href="#" class="sidebar-link" onclick="window.switchTab('admin-master-status', this)"><i class="fas fa-tags"></i> Master Status</a>
                     <a href="#" class="sidebar-link" onclick="window.switchTab('admin-master-akun', this)"><i class="fas fa-users-cog"></i> Master Akun</a>
+                    <!-- Tambahkan 2 baris ini di atas menu Laporan pada Admin -->
+                    <p class="px-8 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8">Operasional</p>
+                    <a href="#" class="sidebar-link" onclick="window.switchTab('admin-repo', this)"><i class="fas fa-warehouse"></i> Manajemen Repo</a>
+                    <a href="#" class="sidebar-link" onclick="window.switchTab('admin-historikal-repo', this)"><i class="fas fa-history"></i> Historikal Repo</a>
                     <p class="px-8 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8">Laporan</p>
                     <a href="#" class="sidebar-link" onclick="window.switchTab('admin-ritase', this)"><i class="fas fa-route"></i> Laporan Ritase</a>
                     <a href="#" class="sidebar-link" onclick="window.switchTab('admin-laporan-emkl', this)"><i class="fas fa-file-invoice"></i> Laporan EMKL</a>
@@ -596,6 +600,16 @@
                         <h3 class="text-xl font-bold text-gray-800 tracking-tight section-title-text">Rincian Status Armada</h3>
                     </div>
                     <div id="status-card-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 transition-all duration-500"></div>
+                </div>
+
+                <!-- RINCIAN STATUS REPO -->
+                <div id="shared-status-repo" class="mb-10 admin-only">
+                    <div class="flex items-center gap-4 mb-6 title-section-normal">
+                        <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-sm section-icon-box"><i class="fas fa-warehouse text-lg"></i></div>
+                        <h3 class="text-xl font-bold text-gray-800 tracking-tight section-title-text">Rincian Status Repo</h3>
+                    </div>
+                    <!-- Perhatikan class grid di bawah ini sudah disamakan dengan Vendor (lg:grid-cols-4) -->
+                    <div id="repo-card-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 transition-all duration-500"></div>
                 </div>
 
                 <div id="admin-home" class="content-section">
@@ -730,6 +744,125 @@
                         <div class="overflow-x-auto rounded-xl border border-gray-200">
                             <table class="table-modern" id="table-master-akun">
                                 <thead><tr><th>Nama Lengkap / Vendor</th><th>Role (Akses)</th><th>Email Login</th><th class="w-40 text-center">Tindakan</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="admin-repo" class="content-section">
+                    <div class="flex items-center gap-4 mb-6 title-section-normal">
+                    </div>
+
+                    <!-- FORM TAMBAH REPO (UI/UX MODERN) -->
+                    <div class="card-container mb-8 bg-gray-50/30">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2"><i class="fas fa-boxes text-blue-600"></i> Pindahkan FO ke Repo</h3>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- BAGIAN KIRI: Checklist FO Searchable -->
+                            <div class="lg:col-span-2 border border-gray-200 rounded-xl overflow-hidden bg-white flex flex-col h-72 shadow-sm">
+                                <!-- Search Header -->
+                                <div class="p-3 bg-gray-50 border-b border-gray-200">
+                                    <label class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-2">Pilih FO Dari Ritase Selesai</label>
+                                    <div class="input-icon-wrapper w-full">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                        <input type="text" id="search-repo-fo" class="w-full pl-10 py-2 text-sm outline-none bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all" placeholder="Cari FO, Plat, atau Vendor..." oninput="window.renderRepoFOCheckboxes()">
+                                    </div>
+                                </div>
+                                <!-- Scrollable Checklist -->
+                                <div id="repo-fo-list" class="flex-1 overflow-y-auto p-2 space-y-1 bg-white">
+                                    <!-- Checkbox digenerate oleh JS -->
+                                </div>
+                                <!-- Footer Info -->
+                                <div class="p-3 bg-gray-50 border-t border-gray-200 text-xs font-bold text-gray-600 flex justify-between items-center">
+                                    <span id="repo-selected-count" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full">0 FO Terpilih</span>
+                                    <span class="text-gray-400 font-medium"><i class="fas fa-check-square mr-1 text-blue-500"></i>Bisa pilih lebih dari satu</span>
+                                </div>
+                            </div>
+
+                            <!-- BAGIAN KANAN: Lokasi & Submit -->
+                            <div class="flex flex-col gap-4">
+                                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex-1 flex flex-col justify-center">
+                                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-3 text-center">Pilih Lokasi Repo Tujuan</label>
+                                    <select id="repo-lokasi" class="input-modern font-black text-center text-purple-700 border-purple-200 bg-purple-50 w-full shadow-sm py-3 text-lg cursor-pointer">
+                                        <option value="">-- PILIH REPO --</option>
+                                        <option value="GPI">GPI</option>
+                                        <option value="Maruzen">Maruzen</option>
+                                        <option value="GLT">GLT</option>
+                                    </select>
+                                    <div class="mt-4 p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-center">
+                                        <p class="text-[11px] text-gray-500 font-medium leading-relaxed"><i class="fas fa-info-circle text-blue-500 mr-1"></i><b>Jam Masuk, Tgl Open, & Nama Kapal</b> dapat diisi nanti melalui tombol <b class="text-gray-700">"Update Detail"</b> pada tabel di bawah.</p>
+                                    </div>
+                                </div>
+                                <button onclick="window.addRepo()" class="btn-primary w-full py-3.5 shadow-md justify-center text-base"><i class="fas fa-cloud-upload-alt mr-2"></i> Pindahkan Ke Repo</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABEL MONITORING REPO -->
+                    <div class="card-container">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                            <h4 class="text-lg font-bold text-gray-800 flex items-center"><i class="fas fa-list-alt text-blue-500 mr-2"></i> Daftar FO Masuk Repo</h4>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-gray-200">
+                            <table class="table-modern" id="table-admin-repo">
+                                <thead>
+                                    <tr>
+                                        <th class="whitespace-nowrap">Nomor FO</th>
+                                        <th class="whitespace-nowrap">DN & Container</th>
+                                        <th class="whitespace-nowrap">Vendor & Plat</th>
+                                        <th class="whitespace-nowrap text-center">Lokasi Repo</th>
+                                        <th class="whitespace-nowrap">Detail Kapal & Tanggal</th>
+                                        <th class="whitespace-nowrap text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="admin-historikal-repo" class="content-section">
+                    <div class="card-container">
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 pb-6 border-b border-gray-100 gap-4">
+                            <div class="flex items-center gap-4 flex-shrink-0">
+                                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
+                                    <i class="fas fa-history text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-gray-800 tracking-tight">Historikal Repo</h3>
+                                    <p class="text-xs text-gray-500 font-semibold mt-0.5">Riwayat FO Repo Selesai</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+                                <div class="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm w-full sm:w-auto">
+                                    <input type="date" id="filter-start-historikal" class="bg-transparent border-none text-sm font-semibold text-gray-600 outline-none cursor-pointer w-full sm:w-auto" onchange="window.renderHistorikalRepo()" title="Dari Tanggal">
+                                    <span class="text-gray-400 font-bold mx-2">-</span>
+                                    <input type="date" id="filter-end-historikal" class="bg-transparent border-none text-sm font-semibold text-gray-600 outline-none cursor-pointer w-full sm:w-auto" onchange="window.renderHistorikalRepo()" title="Sampai Tanggal">
+                                </div>
+                                <div class="input-icon-wrapper w-full sm:w-64">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                    <input type="text" id="search-historikal-repo" class="input-modern pl-10 py-2.5 text-sm w-full shadow-sm border-gray-200" placeholder="Cari FO/Kapal/Vendor..." oninput="window.renderHistorikalRepo()">
+                                </div>
+                                <button onclick="window.exportHistorikalRepo('Data_Historikal_Repo')" class="btn-success py-2.5 px-5 shadow-sm w-full sm:w-auto justify-center">
+                                    <i class="fas fa-file-excel mr-2"></i> Excel
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-gray-200">
+                            <table class="table-modern" id="table-historikal-repo">
+                                <thead>
+                                    <tr>
+                                        <th class="whitespace-nowrap">Tgl Selesai</th>
+                                        <th class="whitespace-nowrap">Nomor FO</th>
+                                        <th class="whitespace-nowrap">DN & Container</th>
+                                        <th class="whitespace-nowrap">Vendor & Plat</th>
+                                        <th class="whitespace-nowrap text-center">Lokasi Repo</th>
+                                        <th class="whitespace-nowrap">Detail Kapal & Tanggal</th>
+                                        <th class="whitespace-nowrap text-center">Aksi</th>
+                                    </tr>
+                                </thead>
                                 <tbody></tbody>
                             </table>
                         </div>
@@ -955,6 +1088,10 @@
                             </div>
                             
                             <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+                                <select id="filter-vendor-ritase" class="input-modern py-2.5 px-4 text-sm w-full sm:w-40 shadow-sm font-semibold text-gray-700 cursor-pointer border-gray-200 admin-only hidden" onchange="window.filterRitase()">
+                                    <option value="ALL">-- Semua Vendor --</option>
+                                </select>
+
                                 <div class="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm w-full sm:w-auto">
                                     <input type="date" id="filter-start-date" class="bg-transparent border-none text-sm font-semibold text-gray-600 outline-none cursor-pointer w-full sm:w-auto" onchange="window.filterRitase()" title="Dari Tanggal">
                                     <span class="text-gray-400 font-bold mx-2">-</span>
@@ -972,14 +1109,12 @@
 
                         <div class="overflow-x-auto rounded-xl border border-gray-200">
                             <table class="table-modern" id="table-ritase">
-                                <thead>
-                                    </thead>
+                                <thead></thead>
                                 <tbody></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-
             </main>
         </div>
     </div>
@@ -1009,6 +1144,7 @@
         let masterAkun = [];
         let masterJenisProduk = [];
         let STATUS_OPTIONS = [];
+        let repoData = [];
         
         let perfBarChart = null;
         let perfDonutChart = null;
@@ -1190,9 +1326,11 @@
         }
 
         window.switchTab = (tabId, element) => {
+            // 1. Reset semua tab dan menu agar tidak aktif
             document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
             
+            // 2. Logika Navigasi per Tab
             if(tabId === 'admin-laporan-emkl') {
                 document.getElementById('admin-laporan-emkl').classList.add('active');
             } else if(tabId === 'admin-update-status') {
@@ -1206,20 +1344,35 @@
                 } else {
                     window.renderPerformanceEMKL();
                 }
+            } else if(tabId === 'admin-repo') { 
+                document.getElementById('admin-repo').classList.add('active');
+                if(window.updateRepoFODropdown) window.updateRepoFODropdown();
+            } else if(tabId === 'admin-historikal-repo') { 
+                document.getElementById('admin-historikal-repo').classList.add('active');
+                if(window.renderHistorikalRepo) window.renderHistorikalRepo();
             } else if(['admin-ritase', 'emkl-ritase'].includes(tabId)) { 
                 document.getElementById('shared-ritase').classList.add('active'); 
-                renderRitaseTable(); 
+                if(window.renderRitaseTable) window.renderRitaseTable(); 
             } else { 
-                document.getElementById(tabId).classList.add('active'); 
+                const targetTab = document.getElementById(tabId);
+                if(targetTab) targetTab.classList.add('active'); 
             }
             
+            // 3. Logika Menampilkan/Menyembunyikan Komponen Dashboard Utama
             if(['admin-home', 'emkl-home'].includes(tabId)) { 
-                document.getElementById('shared-cards').style.display = 'grid'; 
-                document.getElementById('shared-status-rincian').style.display = 'block'; 
+                if(document.getElementById('shared-cards')) document.getElementById('shared-cards').style.display = 'grid'; 
+                if(document.getElementById('shared-status-rincian')) document.getElementById('shared-status-rincian').style.display = 'block'; 
+                
+                // PERBAIKAN: Pastikan Rincian Status Repo HANYA muncul untuk Admin
+                if(document.getElementById('shared-status-repo')) {
+                    document.getElementById('shared-status-repo').style.display = (userRole === 'admin') ? 'block' : 'none';
+                }
+                
                 if(document.getElementById('welcome-banner')) document.getElementById('welcome-banner').style.display = 'flex';
             } else { 
-                document.getElementById('shared-cards').style.display = 'none'; 
-                document.getElementById('shared-status-rincian').style.display = 'none'; 
+                if(document.getElementById('shared-cards')) document.getElementById('shared-cards').style.display = 'none'; 
+                if(document.getElementById('shared-status-rincian')) document.getElementById('shared-status-rincian').style.display = 'none'; 
+                if(document.getElementById('shared-status-repo')) document.getElementById('shared-status-repo').style.display = 'none'; 
                 if(document.getElementById('welcome-banner')) document.getElementById('welcome-banner').style.display = 'none';
             }
             
@@ -1281,17 +1434,15 @@
                 masterJenisProduk = snap.docs.map(d => ({id: d.id, name: d.data().name})); 
                 if(userRole === 'admin') renderJenisProdukTable(); 
                 if(userRole === 'admin') window.renderAdminUpdateStatusCards();
-                if(userRole === 'emkl') renderUpdateStatusCards();
+                if(userRole === 'emkl') window.renderUpdateStatusCards();
             });
 
-            // --- BAGIAN YANG DIPERBAIKI (Hanya Admin yang meload tabel Users) ---
             if (userRole === 'admin') {
                 onSnapshot(collection(db, "users"), (snap) => {
                     masterAkun = snap.docs.map(d => ({id: d.id, ...d.data()}));
                     renderAkunTable();
                 });
             }
-            // -------------------------------------------------------------------
 
             onSnapshot(collection(db, "master_statuses"), (snap) => { 
                 let rawData = snap.docs.map(d => ({id: d.id, ...d.data()}));
@@ -1304,8 +1455,8 @@
                 masterStatuses = rawData; 
                 STATUS_OPTIONS = masterStatuses.map(d => d.name); 
                 if(userRole === 'admin') renderStatusTable(); 
-                renderDashboardCards(); 
-                if(userRole === 'emkl') renderUpdateStatusCards(); 
+                if(window.renderDashboardCards) window.renderDashboardCards(); 
+                if(userRole === 'emkl') window.renderUpdateStatusCards(); 
                 if(userRole === 'admin') window.renderAdminUpdateStatusCards(); 
             });
 
@@ -1314,7 +1465,7 @@
 
             onSnapshot(qTrucks, (snap) => { 
                 trucksData = snap.docs.map(d => ({id: d.id, ...d.data()})); 
-                renderDashboardCards(); 
+                if(window.renderDashboardCards) window.renderDashboardCards(); 
                 renderTruckTables();
                 if(userRole === 'admin') {
                     window.renderAdminLaporanEMKL();
@@ -1323,7 +1474,7 @@
                         window.renderPerformanceEMKL();
                     }
                 }
-                if(userRole === 'emkl') renderUpdateStatusCards(); 
+                if(userRole === 'emkl') window.renderUpdateStatusCards(); 
             });
 
             let qRitase = collection(db, "ritase"); 
@@ -1336,6 +1487,22 @@
                     if(document.getElementById('admin-performance-emkl').classList.contains('active')) {
                         window.renderPerformanceEMKL();
                     }
+                    if(window.updateRepoFODropdown) window.updateRepoFODropdown();
+                }
+            });
+
+            // ==========================================
+            // LISTENER TAMBAHAN UNTUK MANAJEMEN REPO
+            // ==========================================
+            onSnapshot(collection(db, "repo"), (snap) => {
+                repoData = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => b.createdAt - a.createdAt);
+                if (userRole === 'admin') {
+                    if(window.renderRepoTable) window.renderRepoTable();
+                    if(window.updateRepoFODropdown) window.updateRepoFODropdown();
+                    if(window.renderHistorikalRepo) window.renderHistorikalRepo();
+                    
+                    // WAJIB ADA: Memicu update angka di Card Dashboard saat data Repo berubah
+                    if(window.renderDashboardCards) window.renderDashboardCards(); 
                 }
             });
         }
@@ -1430,24 +1597,48 @@
 
         window.editAkun = async (id, oldName, oldRole) => {
             const { value: formValues } = await Swal.fire({
-                title: '<span style="font-size: 1.25rem; font-family: Poppins;">Edit Data Akun</span>',
+                title: '<span style="font-size: 1.25rem; font-family: Poppins; font-weight:800; color:#1e293b;">Edit Data Akun</span>',
+                customClass: {
+                    popup: 'rounded-2xl shadow-2xl border border-gray-100'
+                },
                 html: `
-                    <div style="text-align: left; font-family: Poppins;">
-                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Nama Pengguna / Vendor</label>
-                        <input id="sw-akun-nama" class="swal2-input" value="${oldName}" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">
+                    <div class="text-left font-sans mt-3">
+                        <!-- Form Input Group -->
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-2"><i class="fas fa-user text-blue-400 mr-1.5 w-4"></i>Nama Pengguna / Vendor</label>
+                                <input type="text" id="sw-akun-nama" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm box-border" value="${oldName}" autocomplete="off" placeholder="Masukkan nama lengkap...">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-2"><i class="fas fa-user-shield text-purple-400 mr-1.5 w-4"></i>Role / Akses</label>
+                                <select id="sw-akun-role" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all shadow-sm box-border cursor-pointer">
+                                    <option value="admin" ${oldRole === 'admin' ? 'selected' : ''}>Administrator</option>
+                                    <option value="emkl" ${oldRole === 'emkl' ? 'selected' : ''}>Vendor EMKL</option>
+                                </select>
+                            </div>
+                        </div>
                         
-                        <label style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 15px; display: block;">Role / Akses</label>
-                        <select id="sw-akun-role" class="swal2-input" style="margin-top: 5px; border-radius: 8px; font-size: 14px; width:100%; box-sizing:border-box; padding:8px;">
-                            <option value="admin" ${oldRole === 'admin' ? 'selected' : ''}>Admin</option>
-                            <option value="emkl" ${oldRole === 'emkl' ? 'selected' : ''}>EMKL</option>
-                        </select>
-                        <p style="font-size: 10px; color: #ef4444; margin-top: 10px;">*Email dan Password tidak dapat diubah dari menu ini untuk alasan keamanan.</p>
+                        <!-- Info Security Box -->
+                        <div class="mt-6 p-3 bg-red-50/50 rounded-xl border border-red-100 flex items-start gap-3 shadow-sm">
+                            <div class="mt-0.5"><i class="fas fa-lock text-red-400"></i></div>
+                            <p class="text-[11px] text-gray-600 font-medium leading-relaxed"><b>Keamanan Terkunci:</b> Email dan Password tidak dapat diubah dari menu ini untuk mencegah perubahan akses tanpa otorisasi.</p>
+                        </div>
                     </div>
                 `,
-                showCancelButton: true, confirmButtonColor: '#2563eb', cancelButtonColor: '#cbd5e1',
+                showCancelButton: true, 
+                confirmButtonColor: '#2563eb', 
+                cancelButtonColor: '#94a3b8', 
+                confirmButtonText: '<i class="fas fa-save mr-1.5"></i> Simpan Perubahan',
+                cancelButtonText: 'Batal',
                 preConfirm: () => {
+                    const newName = document.getElementById('sw-akun-nama').value.trim();
+                    if (!newName) {
+                        Swal.showValidationMessage('Nama Pengguna tidak boleh kosong!');
+                        return false;
+                    }
                     return {
-                        name: document.getElementById('sw-akun-nama').value.trim(),
+                        name: newName,
                         role: document.getElementById('sw-akun-role').value
                     }
                 }
@@ -1599,9 +1790,17 @@
 
         window.saveAdminUpdateStatus = async (id) => {
             const st = document.getElementById(`adm_st_${id}`).value; 
+            const ncVal = document.getElementById(`adm_nc_${id}`).value.trim();
+
+            // Validasi No Container: Wajib kecuali untuk status di bawah ini
+            const excludeNcStatuses = ['tersedia', 'muat depo', 'storing', 'no driver'];
+            if (!excludeNcStatuses.includes(st.toLowerCase()) && !ncVal) {
+                return Swal.fire({icon: 'error', title: 'Data Belum Lengkap', text: `Kolom No Container WAJIB diisi untuk status ${st}!`, confirmButtonColor: '#2563eb'});
+            }
+
             let dataUpdate = { status: st, nama_driver: document.getElementById(`adm_nd_${id}`).value, no_hp: document.getElementById(`adm_nh_${id}`).value, terakhir_update: Date.now() }; 
             if(st.toLowerCase() !== 'tersedia') { 
-                dataUpdate = { ...dataUpdate, dn: document.getElementById(`adm_dn_${id}`).value, jenis_produk: document.getElementById(`adm_jp_${id}`).value, daftar_dco: document.getElementById(`adm_dc_${id}`).value, tgl_timbang_1: document.getElementById(`adm_t1_${id}`).value, tgl_timbang_2: document.getElementById(`adm_t2_${id}`).value, fo: document.getElementById(`adm_fo_${id}`).value, no_container: document.getElementById(`adm_nc_${id}`).value }; 
+                dataUpdate = { ...dataUpdate, dn: document.getElementById(`adm_dn_${id}`).value, jenis_produk: document.getElementById(`adm_jp_${id}`).value, daftar_dco: document.getElementById(`adm_dc_${id}`).value, tgl_timbang_1: document.getElementById(`adm_t1_${id}`).value, tgl_timbang_2: document.getElementById(`adm_t2_${id}`).value, fo: document.getElementById(`adm_fo_${id}`).value, no_container: ncVal }; 
             } else { 
                 dataUpdate = { ...dataUpdate, dn: '', jenis_produk: '', daftar_dco: '', tgl_timbang_1: '', tgl_timbang_2: '', fo: '', no_container: '' }; 
             } 
@@ -1910,131 +2109,401 @@
             iconContainer.style.backgroundImage = '';
 
             if(type === 'total') {
-                title.innerText = 'TOTAL ARMADA TERDAFTAR'; subtitle.innerText = 'Daftar keseluruhan unit operasional.';
-                icon.className = 'fas fa-truck text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-blue-600';
+                title.innerText = 'TOTAL ARMADA TERDAFTAR'; 
+                subtitle.innerText = 'Daftar keseluruhan unit operasional.';
+                icon.className = 'fas fa-truck text-xl md:text-3xl'; 
+                iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-blue-600';
             } else if(type === 'alokasi') {
-                title.innerText = 'ARMADA DALAM TUGAS (ALOKASI)'; subtitle.innerText = 'Daftar armada yang sedang memiliki rute aktif.';
-                icon.className = 'fas fa-cogs text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-green-600';
+                title.innerText = 'ARMADA DALAM TUGAS (ALOKASI)'; 
+                subtitle.innerText = 'Daftar armada yang sedang memiliki rute aktif.';
+                icon.className = 'fas fa-cogs text-xl md:text-3xl'; 
+                iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-green-600';
             } else if(type === 'belum') {
-                title.innerText = 'ARMADA STANDBY (TERSEDIA)'; subtitle.innerText = 'Daftar armada yang menunggu alokasi tugas.';
-                icon.className = 'fas fa-clock text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-orange-500';
+                title.innerText = 'ARMADA STANDBY (TERSEDIA)'; 
+                subtitle.innerText = 'Daftar armada yang menunggu alokasi tugas.';
+                icon.className = 'fas fa-clock text-xl md:text-3xl'; 
+                iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg';
+                iconContainer.style.backgroundColor = '#f97316'; 
             } else if(type === 'vendor_total') {
-                title.innerText = 'SELURUH PENGELOLA VENDOR'; subtitle.innerText = 'Daftar armada berdasarkan induk pengelola.';
-                icon.className = 'fas fa-building text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-purple-600';
+                title.innerText = 'REKAPITULASI TOTAL VENDOR'; 
+                subtitle.innerText = 'Ringkasan jumlah armada dan performa ritase per vendor.';
+                icon.className = 'fas fa-building text-xl md:text-3xl'; 
+                iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-purple-600';
+            } else if (type.startsWith('repo_')) {
+                const lokasi = type.replace('repo_', '');
+                title.innerText = `STATUS REPO: ${lokasi.toUpperCase()}`; 
+                subtitle.innerText = `Daftar FO aktif di lokasi repo ${lokasi.toUpperCase()}.`;
+                icon.className = 'fas fa-warehouse text-xl md:text-3xl'; 
+                iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-indigo-600'; 
             } else if (type.startsWith('vendor_')) {
-                const vName = type.replace('vendor_', ''); title.innerText = `ARMADA PENGELOLA: ${vName}`; subtitle.innerText = `Rincian unit di bawah naungan ${vName}.`;
-                icon.className = 'fas fa-industry text-xl md:text-3xl'; iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg'; iconContainer.style.backgroundColor = '#7c3aed'; 
+                const vName = type.replace('vendor_', ''); 
+                title.innerText = `ARMADA PENGELOLA: ${vName}`; 
+                subtitle.innerText = `Rincian unit di bawah naungan ${vName}.`;
+                icon.className = 'fas fa-industry text-xl md:text-3xl'; 
+                iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg bg-purple-600'; 
             } else if (type.startsWith('status_')) {
                 const statName = type.replace('status_', ''); 
-                title.innerText = `KATEGORI STATUS: ${statName.toUpperCase()}`; subtitle.innerText = `Daftar unit dengan status aktif ${statName.toUpperCase()}.`;
-                icon.className = getStatusIcon(statName) + ' text-xl md:text-3xl'; let sColor = getStatusStyle(statName);
-                iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg'; iconContainer.style.backgroundColor = sColor.icon;
+                title.innerText = `KATEGORI STATUS: ${statName.toUpperCase()}`; 
+                subtitle.innerText = `Daftar unit dengan status aktif ${statName.toUpperCase()}.`;
+                icon.className = getStatusIcon(statName) + ' text-xl md:text-3xl'; 
+                let sColor = getStatusStyle(statName);
+                iconContainer.className = 'w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white shadow-lg'; 
+                iconContainer.style.backgroundColor = sColor.icon;
             }
 
-            // Mempersiapkan dropdown filter khusus untuk Admin
             const actionBar = document.getElementById('modal-action-bar');
-            const filterSelect = document.getElementById('modal-filter-vendor');
-            if (userRole === 'admin') {
-                if (actionBar) actionBar.classList.remove('hidden');
-                if (filterSelect) {
-                    const uniqueVendors = [...new Set(trucksData.map(t => t.vendor).filter(Boolean))].sort();
-                    let vendorHtml = `<option value="ALL">-- Semua Vendor --</option>`;
-                    uniqueVendors.forEach(v => { vendorHtml += `<option value="${v}">${v}</option>`; });
-                    filterSelect.innerHTML = vendorHtml;
-                    filterSelect.value = 'ALL'; // Reset filter saat modal baru dibuka
+            const excludedStatuses = ['tersedia', 'storing', 'no driver'];
+            const currentStatus = type.toLowerCase().replace('status_', '');
+            const isExcluded = excludedStatuses.includes(currentStatus) || type === 'belum' || type === 'vendor_total' || type.startsWith('repo_');
+
+            if (actionBar) {
+                let exportBtn = actionBar.querySelector('button');
+                
+                if (type === 'vendor_total') {
+                    actionBar.classList.remove('hidden');
+                    if(document.getElementById('modal-filter-lokasi')) document.getElementById('modal-filter-lokasi').parentElement.classList.add('hidden');
+                    if(document.getElementById('modal-filter-vendor')) document.getElementById('modal-filter-vendor').parentElement.classList.add('hidden');
+                    if(document.getElementById('modal-search-repo-container')) document.getElementById('modal-search-repo-container').classList.add('hidden');
+                    
+                    let dateFilter = document.getElementById('modal-ritase-date-filter');
+                    if (!dateFilter) {
+                        const dateContainer = document.createElement('div');
+                        dateContainer.id = 'modal-ritase-date-filter';
+                        dateContainer.className = 'flex items-center bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm';
+                        dateContainer.innerHTML = `
+                            <span class="text-xs font-bold text-gray-500 uppercase mr-3"><i class="fas fa-calendar-alt mr-1"></i> Periode Ritase:</span>
+                            <input type="date" id="modal-ritase-start" class="bg-transparent border-none text-sm font-semibold text-gray-600 outline-none cursor-pointer" onchange="window.renderModalTable()" title="Dari Tanggal">
+                            <span class="text-gray-400 font-bold mx-2">-</span>
+                            <input type="date" id="modal-ritase-end" class="bg-transparent border-none text-sm font-semibold text-gray-600 outline-none cursor-pointer" onchange="window.renderModalTable()" title="Sampai Tanggal">
+                        `;
+                        actionBar.insertBefore(dateContainer, actionBar.querySelector('button'));
+                    } else {
+                        dateFilter.classList.remove('hidden');
+                    }
+
+                    // ==============================================================
+                    // SET DEFAULT TANGGAL (30 HARI TERAKHIR) SAAT MODAL DIBUKA
+                    // ==============================================================
+                    const startInput = document.getElementById('modal-ritase-start');
+                    const endInput = document.getElementById('modal-ritase-end');
+                    if (startInput && endInput) {
+                        const today = new Date();
+                        const past30Days = new Date();
+                        past30Days.setDate(today.getDate() - 30);
+                        
+                        // Helper fungsi untuk format YYYY-MM-DD
+                        const formatToDateInput = (d) => {
+                            let month = '' + (d.getMonth() + 1);
+                            let day = '' + d.getDate();
+                            let year = d.getFullYear();
+                            if (month.length < 2) month = '0' + month;
+                            if (day.length < 2) day = '0' + day;
+                            return [year, month, day].join('-');
+                        };
+                        
+                        startInput.value = formatToDateInput(past30Days);
+                        endInput.value = formatToDateInput(today);
+                    }
+                    // ==============================================================
+
+                    if(exportBtn) exportBtn.setAttribute('onclick', `window.exportExcel('modal-table', 'Rekap_Vendor')`);
+                    
+                } else if (type.startsWith('repo_')) {
+                    actionBar.classList.remove('hidden');
+                    if(document.getElementById('modal-filter-lokasi')) document.getElementById('modal-filter-lokasi').parentElement.classList.add('hidden');
+                    if(document.getElementById('modal-filter-vendor')) document.getElementById('modal-filter-vendor').parentElement.classList.add('hidden');
+                    if(document.getElementById('modal-ritase-date-filter')) document.getElementById('modal-ritase-date-filter').classList.add('hidden');
+
+                    let searchRepo = document.getElementById('modal-search-repo-container');
+                    if (!searchRepo) {
+                        const searchContainer = document.createElement('div');
+                        searchContainer.id = 'modal-search-repo-container';
+                        searchContainer.className = 'flex items-center gap-3 w-full sm:w-auto ml-auto mr-4';
+                        searchContainer.innerHTML = `
+                            <div class="input-icon-wrapper w-full sm:w-64">
+                                <i class="fas fa-search text-gray-400"></i>
+                                <input type="text" id="modal-search-repo-input" class="input-modern pl-10 py-2 text-sm w-full shadow-sm border-gray-200" placeholder="Cari FO/Vendor/Kapal..." oninput="window.renderModalTable()">
+                            </div>`;
+                        actionBar.insertBefore(searchContainer, actionBar.querySelector('button'));
+                    } else {
+                        searchRepo.classList.remove('hidden');
+                        document.getElementById('modal-search-repo-input').value = ''; // Reset
+                    }
+                    if(exportBtn) exportBtn.setAttribute('onclick', `window.exportRepoModalExcel('${type}')`);
+                    
+                } else if (!isExcluded || userRole === 'admin') {
+                    actionBar.classList.remove('hidden');
+                    if(document.getElementById('modal-ritase-date-filter')) document.getElementById('modal-ritase-date-filter').classList.add('hidden');
+                    if(document.getElementById('modal-search-repo-container')) document.getElementById('modal-search-repo-container').classList.add('hidden');
+                    
+                    let filterContainer = actionBar.querySelector('.flex.items-center.gap-3');
+                    let lokasiFilter = document.getElementById('modal-filter-lokasi');
+                    
+                    if (!isExcluded) {
+                        if (!lokasiFilter) {
+                            const newFilter = document.createElement('div');
+                            newFilter.className = 'flex items-center gap-3 ml-4';
+                            newFilter.innerHTML = `
+                                <label class="text-xs font-bold text-gray-500 uppercase">Lokasi Muat:</label>
+                                <select id="modal-filter-lokasi" class="input-modern py-2 px-3 text-sm w-48 shadow-sm border-gray-200" onchange="window.renderModalTable()">
+                                    <option value="ALL">-- Semua Lokasi --</option>
+                                </select>`;
+                            actionBar.insertBefore(newFilter, actionBar.querySelector('button'));
+                            lokasiFilter = document.getElementById('modal-filter-lokasi');
+                        }
+                        
+                        let lokasiHtml = `<option value="ALL">-- Semua Lokasi --</option>`;
+                        masterJenisProduk.forEach(p => { lokasiHtml += `<option value="${p.name}">${p.name}</option>`; });
+                        lokasiFilter.innerHTML = lokasiHtml;
+                        lokasiFilter.value = 'ALL';
+                        lokasiFilter.parentElement.classList.remove('hidden');
+                    } else if (lokasiFilter) {
+                        lokasiFilter.parentElement.classList.add('hidden');
+                    }
+
+                    const filterVendor = document.getElementById('modal-filter-vendor');
+                    if (filterVendor) {
+                        if (userRole === 'admin') {
+                            filterVendor.parentElement.classList.remove('hidden');
+                            const uniqueVendors = [...new Set(trucksData.map(t => t.vendor).filter(Boolean))].sort();
+                            let vendorHtml = `<option value="ALL">-- Semua Vendor --</option>`;
+                            uniqueVendors.forEach(v => { vendorHtml += `<option value="${v}">${v}</option>`; });
+                            filterVendor.innerHTML = vendorHtml;
+                            filterVendor.value = 'ALL';
+                        } else {
+                            filterVendor.parentElement.classList.add('hidden');
+                        }
+                    }
+                    if(exportBtn) exportBtn.setAttribute('onclick', `window.exportExcel('modal-table', 'Detail_Armada_Modal')`);
+                } else {
+                    actionBar.classList.add('hidden');
                 }
-            } else {
-                if (actionBar) actionBar.classList.add('hidden'); // Sembunyikan filter untuk akun non-admin
             }
 
-            // Panggil fungsi render isi tabel
             window.renderModalTable();
-
-            modal.classList.remove('hidden'); setTimeout(() => { modal.classList.add('show'); }, 10);
+            modal.classList.remove('hidden'); 
+            setTimeout(() => { modal.classList.add('show'); }, 10);
         };
 
         window.renderModalTable = () => {
             const type = window.currentModalType;
             const tbody = document.getElementById('modal-table-body');
             const thead = document.getElementById('modal-table-head');
-            const filterSelect = document.getElementById('modal-filter-vendor');
-            const selectedVendor = filterSelect ? filterSelect.value : 'ALL';
+            
+            // =======================================================
+            // 1. KHUSUS UNTUK TYPE REPO_ (GPI, Maruzen, GLT)
+            // =======================================================
+            if (type.startsWith('repo_')) {
+                const lokasi = type.replace('repo_', '');
+                if (thead) {
+                    thead.innerHTML = `<tr>
+                        <th class="w-10 text-center">#</th>
+                        <th class="whitespace-nowrap">Nomor FO</th>
+                        <th class="whitespace-nowrap">DN & Container</th>
+                        <th class="whitespace-nowrap">Vendor & Plat</th>
+                        <th class="text-center whitespace-nowrap">Lokasi Repo</th>
+                        <th class="whitespace-nowrap">Tgl Masuk Repo</th>
+                        <th class="whitespace-nowrap">Tgl Open</th>
+                        <th class="whitespace-nowrap">Nama Kapal</th>
+                    </tr>`;
+                }
 
+                let repoAktif = repoData.filter(rp => rp.status_repo !== 'Selesai' && (rp.lokasi_repo || '').toUpperCase() === lokasi.toUpperCase());
+                
+                const searchInput = document.getElementById('modal-search-repo-input');
+                const searchVal = searchInput ? searchInput.value.toLowerCase() : '';
+
+                // Terapkan Filter Pencarian
+                if(searchVal) {
+                    repoAktif = repoAktif.filter(r => 
+                        (r.fo||'').toLowerCase().includes(searchVal) || 
+                        (r.nama_kapal||'').toLowerCase().includes(searchVal) || 
+                        (r.vendor||'').toLowerCase().includes(searchVal) ||
+                        (r.no_container||'').toLowerCase().includes(searchVal) ||
+                        (r.plat_nomor||'').toLowerCase().includes(searchVal)
+                    );
+                }
+
+                tbody.innerHTML = '';
+                if(repoAktif.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-20"><i class="fas fa-warehouse text-gray-300 text-6xl mb-6 block"></i><p class="text-gray-500 text-xl font-bold">TIDAK ADA DATA REPO AKTIF</p></td></tr>`;
+                } else {
+                    repoAktif.forEach((rp, index) => {
+                        const formatOpts = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: false};
+                        const masuk = rp.tgl_masuk_repo ? new Date(rp.tgl_masuk_repo).toLocaleString('id-ID', formatOpts) : '-';
+                        const open = rp.tgl_open ? new Date(rp.tgl_open).toLocaleString('id-ID', formatOpts) : '-';
+                        const kapal = rp.nama_kapal || '-';
+                        
+                        let badgeColor = (rp.lokasi_repo || '').toUpperCase() === 'GPI' ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 
+                                        ((rp.lokasi_repo || '').toUpperCase() === 'MARUZEN' ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-amber-100 text-amber-700 border-amber-200');
+
+                        tbody.innerHTML += `
+                            <tr class="transition-colors hover:bg-gray-50">
+                                <td class="text-center font-bold text-gray-400">${index + 1}</td>
+                                <td class="font-black text-blue-600 text-base whitespace-nowrap">${rp.fo}</td>
+                                <td class="whitespace-nowrap">
+                                    <p class="text-xs font-bold text-gray-800 mb-0.5">DN: ${rp.dn || '-'}</p>
+                                    <p class="text-xs font-medium text-gray-500">Cont: ${rp.no_container || '-'}</p>
+                                </td>
+                                <td class="whitespace-nowrap">
+                                    <p class="text-xs font-bold text-gray-800 mb-0.5">${rp.vendor || '-'}</p>
+                                    <p class="text-[10px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded inline-block">${rp.plat_nomor || '-'}</p>
+                                </td>
+                                <td class="text-center whitespace-nowrap"><span class="badge border ${badgeColor} px-3 py-1 shadow-sm">${rp.lokasi_repo || '-'}</span></td>
+                                <td class="text-sm text-gray-600 font-medium whitespace-nowrap">${masuk}</td>
+                                <td class="text-sm text-gray-600 font-medium whitespace-nowrap">${open}</td>
+                                <td class="text-sm font-bold text-gray-800 whitespace-nowrap">${kapal}</td>
+                            </tr>`;
+                    });
+                }
+                return; 
+            }
+
+            // =======================================================
+            // 2. KHUSUS UNTUK TYPE REKAP TOTAL VENDOR
+            // =======================================================
+            if (type === 'vendor_total') {
+                if (thead) {
+                    thead.innerHTML = `<tr>
+                        <th class="w-10 text-center">#</th>
+                        <th class="whitespace-nowrap">Nama Vendor</th>
+                        <th class="text-center whitespace-nowrap">Jumlah Mobil</th>
+                        <th class="text-center whitespace-nowrap">Total Ritase</th>
+                        <th class="text-center whitespace-nowrap">Rata-Rata Ritase</th>
+                    </tr>`;
+                }
+
+                const startVal = document.getElementById('modal-ritase-start')?.value;
+                const endVal = document.getElementById('modal-ritase-end')?.value;
+                
+                let startObj = startVal ? new Date(startVal) : new Date(0);
+                startObj.setHours(0,0,0,0);
+                let endObj = endVal ? new Date(endVal) : new Date(8640000000000000);
+                endObj.setHours(23,59,59,999);
+
+                // Filter ritase berdasarkan tanggal timbang 2 (Sesuai Performance EMKL)
+                let filteredRitase = ritaseData.filter(r => {
+                    if(!r.tgl_timbang_2) return false; 
+                    const d = new Date(r.tgl_timbang_2);
+                    if(isNaN(d)) return false;
+                    return d >= startObj && d <= endObj;
+                });
+
+                const rawVendors = [...trucksData.map(t => t.vendor), ...ritaseData.map(r => r.vendor)].filter(Boolean);
+                const allVendors = [...new Set(rawVendors.map(v => v.toUpperCase()))].sort();
+
+                tbody.innerHTML = '';
+                if (allVendors.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-20"><i class="fas fa-building text-gray-300 text-6xl mb-6 block"></i><p class="text-gray-500 text-xl font-bold">TIDAK ADA DATA VENDOR</p></td></tr>`;
+                } else {
+                    let stats = allVendors.map(v => {
+                        const jmlMobil = trucksData.filter(t => (t.vendor || '').toUpperCase() === v).length;
+                        const totRitase = filteredRitase.filter(r => (r.vendor || '').toUpperCase() === v).length;
+                        const avg = jmlMobil > 0 ? (totRitase / jmlMobil).toFixed(1) : 0;
+                        return { vendor: v, jmlMobil, totRitase, avg };
+                    });
+
+                    stats.sort((a,b) => b.totRitase - a.totRitase);
+
+                    stats.forEach((s, index) => {
+                        tbody.innerHTML += `
+                            <tr class="transition-colors hover:bg-gray-50">
+                                <td class="text-center font-bold text-gray-400">${index + 1}</td>
+                                <td class="font-black text-gray-800 text-base uppercase whitespace-nowrap">${s.vendor}</td>
+                                <td class="text-center font-bold text-gray-700 whitespace-nowrap">${s.jmlMobil} <span class="text-xs text-gray-400 font-medium ml-1">Unit</span></td>
+                                <td class="text-center font-bold text-blue-600 whitespace-nowrap">${s.totRitase} <span class="text-xs text-gray-400 font-medium ml-1">Rit</span></td>
+                                <td class="text-center font-bold text-gray-700 whitespace-nowrap">${s.avg} <span class="text-xs text-gray-400 font-medium ml-1">Rit/Unit</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+                return; 
+            }
+
+            // =======================================================
+            // 3. TABEL DATA STANDAR (Alokasi, Status, Vendor Detail)
+            // =======================================================
             let filteredData = [];
-            let isDCO = type.toLowerCase() === 'status_daftar dco';
+            let isDCO = type.toLowerCase().includes('status_daftar dco');
             let isOtwMill = type.toLowerCase() === 'status_otw mill';
 
-            // 1. Ekstrak Data Sesuai Kartu yang Diklik
             if(type === 'total') {
                 filteredData = trucksData; 
             } else if(type === 'alokasi') {
                 filteredData = trucksData.filter(t => (t.status||'').toLowerCase() !== 'tersedia'); 
             } else if(type === 'belum') {
                 filteredData = trucksData.filter(t => (t.status||'').toLowerCase() === 'tersedia'); 
-            } else if(type === 'vendor_total') {
-                filteredData = [...trucksData].sort((a,b) => (a.vendor||'').localeCompare(b.vendor||'')); 
-            } else if (type.startsWith('vendor_')) {
-                const vName = type.replace('vendor_', ''); filteredData = trucksData.filter(t => t.vendor === vName); 
+            } else if (type.startsWith('vendor_')) { 
+                const vName = type.replace('vendor_', ''); 
+                filteredData = trucksData.filter(t => t.vendor === vName); 
             } else if (type.startsWith('status_')) {
                 const statName = type.replace('status_', ''); 
                 filteredData = trucksData.filter(t => (t.status||'').toLowerCase() === statName.toLowerCase());
             }
 
-            // 2. Terapkan Filter Vendor (Jika Admin & Memilih Dropdown)
-            if (userRole === 'admin' && selectedVendor !== 'ALL') {
+            const filterVendorEl = document.getElementById('modal-filter-vendor');
+            const selectedVendor = filterVendorEl ? filterVendorEl.value : 'ALL';
+            
+            const filterLokasiEl = document.getElementById('modal-filter-lokasi');
+            const selectedLokasi = filterLokasiEl ? filterLokasiEl.value : 'ALL';
+
+            if (selectedVendor !== 'ALL' && filterVendorEl && !filterVendorEl.parentElement.classList.contains('hidden')) {
                 filteredData = filteredData.filter(t => t.vendor === selectedVendor);
             }
+            if (selectedLokasi !== 'ALL' && filterLokasiEl && !filterLokasiEl.parentElement.classList.contains('hidden')) {
+                filteredData = filteredData.filter(t => t.jenis_produk === selectedLokasi);
+            }
 
-            // Sesuaikan Judul Header Tabel
+            const excludedStatuses = ['tersedia', 'storing', 'no driver'];
+            const currentStatus = type.toLowerCase().replace('status_', '');
+            const showExtraCols = !excludedStatuses.includes(currentStatus) && type !== 'belum';
+
+            const ncHeader = showExtraCols ? `<th class="whitespace-nowrap">No Container</th>` : '';
+            const lokasiHeader = showExtraCols ? `<th class="whitespace-nowrap">Lokasi Muat</th>` : '';
+
             if (thead) {
+                let baseHeader = `<tr><th class="w-10 text-center">#</th><th class="whitespace-nowrap">Vendor Pengelola</th><th class="whitespace-nowrap">Plat Nomor</th><th class="whitespace-nowrap">Jenis Kendaraan</th><th class="whitespace-nowrap">Nama Pengemudi</th><th class="whitespace-nowrap">Status Terkini</th><th class="whitespace-nowrap">DN</th>`;
                 if (isDCO) {
-                    thead.innerHTML = `<tr><th class="w-10 text-center">#</th><th>Vendor Pengelola</th><th>Plat Nomor</th><th>Jenis Kendaraan</th><th>Nama Pengemudi</th><th>Status Terkini</th><th>DN</th><th>Tgl Tiba Di IKK</th><th>Lead Time</th></tr>`;
+                    thead.innerHTML = `${baseHeader}${ncHeader}${lokasiHeader}<th class="whitespace-nowrap">Tgl Tiba Di IKK</th><th class="whitespace-nowrap">Lead Time</th></tr>`;
                 } else if (isOtwMill) {
-                    thead.innerHTML = `<tr><th class="w-10 text-center">#</th><th>Vendor Pengelola</th><th>Plat Nomor</th><th>Jenis Kendaraan</th><th>Nama Pengemudi</th><th>Status Terkini</th><th>DN</th><th>Tgl Selesai Delivery</th><th>Lama Perjalanan</th></tr>`;
+                    thead.innerHTML = `${baseHeader}${ncHeader}${lokasiHeader}<th class="whitespace-nowrap">Tgl Selesai Delivery</th><th class="whitespace-nowrap">Lama Perjalanan</th></tr>`;
                 } else {
-                    thead.innerHTML = `<tr><th class="w-10 text-center">#</th><th>Vendor Pengelola</th><th>Plat Nomor</th><th>Jenis Kendaraan</th><th>Nama Pengemudi</th><th>Status Terkini</th><th>DN</th></tr>`;
+                    thead.innerHTML = `${baseHeader}${ncHeader}${lokasiHeader}</tr>`;
                 }
             }
 
             tbody.innerHTML = '';
             if(filteredData.length === 0) {
-                let colspan = (isDCO || isOtwMill) ? 9 : 7;
+                let colspan = showExtraCols ? 9 : 7;
+                if (isDCO || isOtwMill) colspan += 2;
                 tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-20"><i class="fas fa-box-open text-gray-300 text-6xl mb-6 block"></i><p class="text-gray-500 text-xl font-bold">TIDAK ADA DATA</p></td></tr>`;
             } else {
                 filteredData.forEach((t, index) => {
                     let sColor = getStatusStyle(t.status);
                     let isPresentation = document.body.classList.contains('presentation-mode');
-                    let badgeHtml = isPresentation 
-                        ? `<span class="badge" style="font-size:1.1rem; padding:0.5rem 1.5rem; background-color: ${sColor.bg}; color: ${sColor.icon}; border: 1px solid ${sColor.border};">${t.status}</span>`
-                        : `<span class="badge" style="background-color: ${sColor.bg}; color: ${sColor.icon}; border: 1px solid ${sColor.border};">${t.status}</span>`;
-                    let tdClass = isPresentation ? "font-black text-blue-600 text-2xl tracking-wider" : "font-bold text-blue-600";
+                    let badgeHtml = `<span class="badge" style="${isPresentation ? 'font-size:1.1rem; padding:0.5rem 1.5rem;' : ''} background-color: ${sColor.bg}; color: ${sColor.icon}; border: 1px solid ${sColor.border};">${t.status}</span>`;
                     
-                    let extraCol = "";
+                    let extraCols = "";
+                    if (showExtraCols) {
+                        extraCols = `
+                            <td class="text-gray-800 font-bold whitespace-nowrap">${t.no_container || '-'}</td>
+                            <td class="text-gray-700 font-semibold whitespace-nowrap">${t.jenis_produk || '-'}</td>`;
+                    }
+
+                    let timeCols = "";
                     if (isDCO) {
-                        let leadText = "-";
-                        let tglDcoText = "-";
+                        let leadText = "-"; let tglDcoText = "-";
                         if (t.daftar_dco) {
                             let dcoDate = new Date(t.daftar_dco);
                             if (!isNaN(dcoDate)) {
-                                const formatOptions = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: false};
-                                tglDcoText = dcoDate.toLocaleString('id-ID', formatOptions);
-                                
-                                let startTime = dcoDate.getTime();
-                                let endTime = Date.now();
-                                if (t.tgl_timbang_1) {
-                                    let t1Date = new Date(t.tgl_timbang_1);
-                                    if (!isNaN(t1Date)) endTime = t1Date.getTime();
-                                }
-                                let diffMs = endTime - startTime;
-                                if (diffMs < 0) diffMs = 0;
+                                tglDcoText = dcoDate.toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: false});
+                                let diffMs = Date.now() - dcoDate.getTime();
                                 let diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
                                 let diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                                 leadText = `${diffHrs}j ${diffMins}m`;
-                            } else {
-                                tglDcoText = t.daftar_dco; 
                             }
                         }
-                        extraCol = `<td class="text-sm font-medium text-gray-600">${tglDcoText}</td><td class="font-bold text-orange-600">${leadText}</td>`;
+                        timeCols = `<td class="text-sm font-medium text-gray-600 whitespace-nowrap">${tglDcoText}</td><td class="font-bold text-orange-600 whitespace-nowrap">${leadText}</td>`;
                     } else if (isOtwMill) {
                         let tglSelesaiText = "-";
                         let lamaPerjalananText = "-";
@@ -2056,20 +2525,21 @@
                                 lamaPerjalananText = `${diffHrs}j ${diffMins}m`;
                             }
                         }
-                        extraCol = `<td class="text-sm font-medium text-gray-600">${tglSelesaiText}</td><td class="font-bold text-blue-600">${lamaPerjalananText}</td>`;
+                        timeCols = `<td class="text-sm font-medium text-gray-600 whitespace-nowrap">${tglSelesaiText}</td><td class="font-bold text-blue-600 whitespace-nowrap">${lamaPerjalananText}</td>`;
                     }
 
                     tbody.innerHTML += `
-                    <tr class="transition-colors">
-                        <td class="text-center font-bold text-gray-400">${index + 1}</td>
-                        <td class="text-gray-700">${t.vendor || '-'}</td>
-                        <td class="${tdClass}">${t.plat_nomor}</td>
-                        <td>${t.jenis_mobil}</td>
-                        <td class="text-gray-600">${t.nama_driver}</td>
-                        <td>${badgeHtml}</td>
-                        <td class="text-gray-600 font-medium">${t.dn || '-'}</td>
-                        ${extraCol}
-                    </tr>`;
+                        <tr class="transition-colors hover:bg-gray-50">
+                            <td class="text-center font-bold text-gray-400">${index + 1}</td>
+                            <td class="text-gray-700 whitespace-nowrap">${t.vendor || '-'}</td>
+                            <td class="${isPresentation ? 'font-black text-blue-600 text-2xl' : 'font-bold text-blue-600'} whitespace-nowrap">${t.plat_nomor}</td>
+                            <td class="whitespace-nowrap">${t.jenis_mobil}</td>
+                            <td class="text-gray-600 whitespace-nowrap">${t.nama_driver}</td>
+                            <td class="whitespace-nowrap">${badgeHtml}</td>
+                            <td class="text-gray-600 font-medium whitespace-nowrap">${t.dn || '-'}</td>
+                            ${extraCols}
+                            ${timeCols}
+                        </tr>`;
                 });
             }
         };
@@ -2077,68 +2547,133 @@
         window.closeModal = () => { const modal = document.getElementById('detail-modal'); modal.classList.remove('show'); setTimeout(() => { modal.classList.add('hidden'); }, 300); };
         window.closeModalOnOutsideClick = (event) => { const modalBox = document.getElementById('modal-box'); if (!modalBox.contains(event.target)) { window.closeModal(); } };
 
-        function renderDashboardCards() {
-            const isPresentation = document.body.classList.contains('presentation-mode');
-            const total = trucksData.length; 
-            const alokasi = trucksData.filter(t => (t.status||'').toLowerCase() !== 'tersedia').length; 
-            const belum = trucksData.filter(t => (t.status||'').toLowerCase() === 'tersedia').length;
-            let htmlTop = `
-                <div class="metric-card solid-card bg-grad-blue" onclick="window.openDetailModal('total')" title="Klik detail">
-                    <div class="metric-top"><h3 class="metric-num counter-num" data-val="${total}">0</h3><div class="metric-icon-box"><i class="fas fa-truck metric-icon"></i></div></div>
-                    <p class="metric-title">Total Truck</p>
-                </div>
-                <div class="metric-card solid-card bg-grad-green" onclick="window.openDetailModal('alokasi')" title="Klik detail">
-                    <div class="metric-top"><h3 class="metric-num counter-num" data-val="${alokasi}">0</h3><div class="metric-icon-box"><i class="fas fa-check-circle metric-icon"></i></div></div>
-                    <p class="metric-title">Sudah Alokasi</p>
-                </div>
-                <div class="metric-card solid-card bg-grad-orange" onclick="window.openDetailModal('belum')" title="Klik detail">
-                    <div class="metric-top"><h3 class="metric-num counter-num" data-val="${belum}">0</h3><div class="metric-icon-box"><i class="fas fa-clock metric-icon"></i></div></div>
-                    <p class="metric-title">Belum Alokasi</p>
-                </div>
-            `;
-            if (userRole === 'admin') {
-                const uniqVendors = new Set(trucksData.map(t => t.vendor)).size;
-                htmlTop += `
-                <div class="metric-card solid-card bg-grad-purple" onclick="window.openDetailModal('vendor_total')" title="Klik detail">
-                    <div class="metric-top"><h3 class="metric-num counter-num" data-val="${uniqVendors}">0</h3><div class="metric-icon-box"><i class="fas fa-building metric-icon"></i></div></div>
-                    <p class="metric-title">Total Vendor</p>
-                </div>`;
-            }
-            document.getElementById('shared-cards').innerHTML = htmlTop;
-            if (userRole === 'admin') {
-                const vc = document.getElementById('vendor-card-container'); vc.innerHTML = ''; 
-                const vCount = {}; trucksData.forEach(t => { if(!vCount[t.vendor]) vCount[t.vendor] = 0; vCount[t.vendor] += 1; });
-                for(const [vName, count] of Object.entries(vCount)) { 
-                    vc.innerHTML += `
-                    <div class="split-card" onclick="window.openDetailModal('vendor_${vName}')" title="Klik detail ${vName}">
-                        <div class="split-card-left" style="border-left: 5px solid #7c3aed;">
-                            <div class="card-icon-box" style="background-color: #f3e8ff;"><i class="fas fa-industry" style="color: #7c3aed;"></i></div>
-                            <p class="card-title-text" style="color: #475569;" title="${vName}">${vName}</p>
-                        </div>
-                        <div class="split-card-right"><h3 class="card-number-text text-blue-600 counter-num" data-val="${count}">0</h3></div>
-                    </div>`;
-                }
-            }
-            const sc = document.getElementById('status-card-container'); sc.innerHTML = '';
-            STATUS_OPTIONS.forEach(statusName => { 
-                const sumData = trucksData.filter(t => (t.status||'').toLowerCase() === statusName.toLowerCase()).length;
-                let sColor = getStatusStyle(statusName);
-                let iconClass = getStatusIcon(statusName);
-                let extraPulse = sColor.isUrgent && sumData > 0 ? 'urgent-pulse' : ''; 
-                sc.innerHTML += `
-                <div class="split-card ${extraPulse}" onclick="window.openDetailModal('status_${statusName}')" title="Klik detail ${statusName}">
-                    <div class="split-card-left" style="border-left: 5px solid ${sColor.border};">
-                        <div class="card-icon-box" style="background-color: ${sColor.bg};"><i class="${iconClass}" style="color: ${sColor.icon};"></i></div>
-                        <p class="card-title-text" style="color: #475569;" title="${statusName}">${statusName}</p>
+        window.renderDashboardCards = () => {
+            // ====================================================================
+            // 1. RENDER 4 KARTU UTAMA DI ATAS (TOTAL ARMADA, ALOKASI, DLL)
+            // ====================================================================
+            const sharedCards = document.getElementById('shared-cards');
+            if (sharedCards) {
+                const totalTruck = trucksData.length;
+                const alokasi = trucksData.filter(t => (t.status||'').toLowerCase() !== 'tersedia').length;
+                const belum = trucksData.filter(t => (t.status||'').toLowerCase() === 'tersedia').length;
+                const totalVendor = new Set(trucksData.map(t => t.vendor).filter(Boolean)).size;
+
+                sharedCards.innerHTML = `
+                    <div class="metric-card solid-card bg-grad-blue cursor-pointer" onclick="window.openDetailModal('total')">
+                        <div class="metric-top"><h3 class="metric-num counter-num" data-val="${totalTruck}">0</h3><div class="metric-icon-box"><i class="fas fa-truck metric-icon"></i></div></div>
+                        <p class="metric-title">Total Armada Terdaftar</p>
                     </div>
-                    <div class="split-card-right"><h3 class="card-number-text text-blue-600 counter-num" data-val="${sumData}">0</h3></div>
-                </div>`;
-            });
+                    <div class="metric-card solid-card bg-grad-green cursor-pointer" onclick="window.openDetailModal('alokasi')">
+                        <div class="metric-top"><h3 class="metric-num counter-num" data-val="${alokasi}">0</h3><div class="metric-icon-box"><i class="fas fa-cogs metric-icon"></i></div></div>
+                        <p class="metric-title">Dalam Tugas (Alokasi)</p>
+                    </div>
+                    <div class="metric-card solid-card bg-grad-orange cursor-pointer" onclick="window.openDetailModal('belum')">
+                        <div class="metric-top"><h3 class="metric-num counter-num" data-val="${belum}">0</h3><div class="metric-icon-box"><i class="fas fa-clock metric-icon"></i></div></div>
+                        <p class="metric-title">Standby (Tersedia)</p>
+                    </div>
+                    <div class="metric-card solid-card bg-grad-purple cursor-pointer" onclick="window.openDetailModal('vendor_total')">
+                        <div class="metric-top"><h3 class="metric-num counter-num" data-val="${totalVendor}">0</h3><div class="metric-icon-box"><i class="fas fa-building metric-icon"></i></div></div>
+                        <p class="metric-title">Total Vendor Mitra</p>
+                    </div>
+                `;
+            }
+
+            // ====================================================================
+            // 2. RENDER RINCIAN STATUS ARMADA
+            // ====================================================================
+            const statusContainer = document.getElementById('status-card-container');
+            if (statusContainer) {
+                statusContainer.innerHTML = '';
+                masterStatuses.forEach(s => {
+                    const count = trucksData.filter(t => (t.status||'').toLowerCase() === s.name.toLowerCase()).length;
+                    let sColor = getStatusStyle(s.name);
+                    let sIcon = getStatusIcon(s.name);
+                    statusContainer.innerHTML += `
+                        <div class="split-card ${sColor.isUrgent && count > 0 ? 'urgent-pulse' : ''}" onclick="window.openDetailModal('status_${s.name}')">
+                            <div class="split-card-left" style="border-left: 5px solid ${sColor.border};">
+                                <div class="card-icon-box" style="background-color: ${sColor.bg};"><i class="${sIcon}" style="color: ${sColor.icon};"></i></div>
+                                <p class="card-title-text" style="color: #475569;">${s.name}</p>
+                            </div>
+                            <div class="split-card-right"><h3 class="card-number-text text-blue-600 counter-num" data-val="${count}">0</h3></div>
+                        </div>
+                    `;
+                });
+            }
+
+            // ====================================================================
+            // 3. RENDER RINCIAN STATUS REPO
+            // ====================================================================
+            const repoContainer = document.getElementById('repo-card-container');
+            if (repoContainer && userRole === 'admin') {
+                repoContainer.innerHTML = '';
+                const repoAktif = (Array.isArray(repoData) ? repoData : []).filter(rp => rp.status_repo !== 'Selesai');
+                
+                ['GPI', 'Maruzen', 'GLT'].forEach(lokasi => {
+                    // Gunakan toUpperCase() agar filter kebal huruf besar/kecil
+                    const count = repoAktif.filter(rp => (rp.lokasi_repo || '').toUpperCase() === lokasi.toUpperCase()).length;
+                    
+                    let bgColors = {
+                        'GPI': { bg: '#e0e7ff', icon: '#4f46e5', border: '#6366f1' },
+                        'Maruzen': { bg: '#ffe4e6', icon: '#e11d48', border: '#f43f5e' },
+                        'GLT': { bg: '#fef3c7', icon: '#d97706', border: '#f59e0b' }
+                    };
+                    let c = bgColors[lokasi];
+                    
+                    repoContainer.innerHTML += `
+                    <div class="split-card cursor-pointer transform hover:-translate-y-1 transition-all duration-300" onclick="window.openDetailModal('repo_${lokasi}')" title="Klik detail Repo ${lokasi}">
+                        <div class="split-card-left" style="border-left: 5px solid ${c.border};">
+                            <div class="card-icon-box" style="background-color: ${c.bg};">
+                                <i class="fas fa-warehouse" style="color: ${c.icon};"></i>
+                            </div>
+                            <p class="card-title-text" style="color: #475569;">${lokasi.toUpperCase()}</p>
+                        </div>
+                        <div class="split-card-right">
+                            <h3 class="card-number-text text-blue-600 counter-num" data-val="${count}">${count}</h3>
+                        </div>
+                    </div>`;
+                });
+            }
+
+            // ====================================================================
+            // 4. RENDER PERSEBARAN ARMADA PER VENDOR
+            // ====================================================================
+            const vendorContainer = document.getElementById('vendor-card-container');
+            if (vendorContainer && userRole === 'admin') {
+                vendorContainer.innerHTML = '';
+                const vendors = [...new Set(trucksData.map(t => t.vendor).filter(Boolean))].sort();
+                vendors.forEach(v => {
+                    const count = trucksData.filter(t => t.vendor === v).length;
+                    vendorContainer.innerHTML += `
+                        <div class="split-card cursor-pointer transform hover:-translate-y-1 transition-all duration-300" onclick="window.openDetailModal('vendor_${v}')">
+                            <div class="split-card-left" style="border-left: 5px solid #8b5cf6;">
+                                <div class="card-icon-box" style="background-color: #f3e8ff;"><i class="fas fa-industry" style="color: #9333ea;"></i></div>
+                                <p class="card-title-text" style="color: #475569;">${v}</p>
+                            </div>
+                            <div class="split-card-right"><h3 class="card-number-text text-blue-600 counter-num" data-val="${count}">0</h3></div>
+                        </div>
+                    `;
+                });
+            }
+
+            // ====================================================================
+            // 5. ANIMASI COUNTER ANGKA MENGALIR
+            // ====================================================================
             document.querySelectorAll('.counter-num').forEach(el => {
-                const targetVal = parseInt(el.getAttribute('data-val')) || 0;
-                animateValue(el, 0, targetVal, 800); 
+                let target = parseInt(el.getAttribute('data-val')) || 0;
+                let count = 0;
+                let speed = target / 20;
+                let updateCount = () => {
+                    if(count < target) {
+                        count += speed;
+                        el.innerText = Math.ceil(count);
+                        setTimeout(updateCount, 15);
+                    } else {
+                        el.innerText = target;
+                    }
+                };
+                if(target > 0) updateCount(); else el.innerText = "0";
             });
-        }
+        };
 
         function renderTruckTables() {
             let targetTbody = userRole === 'admin' ? document.querySelector('#table-admin-truck tbody') : document.querySelector('#table-emkl-truck tbody');
@@ -2355,13 +2890,22 @@
 
         window.saveUpdateStatus = async (id) => { 
             const st = document.getElementById(`st_${id}`).value; 
+            const ncVal = document.getElementById(`nc_${id}`).value.trim();
+
+            // Validasi No Container: Wajib kecuali untuk status di bawah ini
+            const excludeNcStatuses = ['tersedia', 'muat depo', 'storing', 'no driver'];
+            if (!excludeNcStatuses.includes(st.toLowerCase()) && !ncVal) {
+                return Swal.fire({icon: 'error', title: 'Data Belum Lengkap', text: `Kolom No Container WAJIB diisi untuk status ${st}!`, confirmButtonColor: '#2563eb'});
+            }
+
             let dataUpdate = { status: st, nama_driver: document.getElementById(`nd_${id}`).value, no_hp: document.getElementById(`nh_${id}`).value, terakhir_update: Date.now() }; 
             if(st.toLowerCase() !== 'tersedia') {
-                dataUpdate = { ...dataUpdate, dn: document.getElementById(`dn_${id}`).value, jenis_produk: document.getElementById(`jp_${id}`).value, daftar_dco: document.getElementById(`dc_${id}`).value, tgl_timbang_1: document.getElementById(`t1_${id}`).value, tgl_timbang_2: document.getElementById(`t2_${id}`).value, fo: document.getElementById(`fo_${id}`).value, no_container: document.getElementById(`nc_${id}`).value };
+                dataUpdate = { ...dataUpdate, dn: document.getElementById(`dn_${id}`).value, jenis_produk: document.getElementById(`jp_${id}`).value, daftar_dco: document.getElementById(`dc_${id}`).value, tgl_timbang_1: document.getElementById(`t1_${id}`).value, tgl_timbang_2: document.getElementById(`t2_${id}`).value, fo: document.getElementById(`fo_${id}`).value, no_container: ncVal };
             } else {
                 dataUpdate = { ...dataUpdate, dn: '', jenis_produk: '', daftar_dco: '', tgl_timbang_1: '', tgl_timbang_2: '', fo: '', no_container: '' };
             }
-            await updateDoc(doc(db, "trucks", id), dataUpdate); Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Database Tersinkronisasi', showConfirmButton: false, timer: 1500}); 
+            await updateDoc(doc(db, "trucks", id), dataUpdate); 
+            Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Database Tersinkronisasi', showConfirmButton: false, timer: 1500}); 
         };
 
         window.finishDelivery = async (id) => { 
@@ -2409,16 +2953,42 @@
             }
 
             const tb = document.querySelector('#table-ritase tbody'); if(!tb) return; tb.innerHTML = ''; 
+            
+            // 1. GENERATE OPSI DROPDOWN VENDOR (Khusus Admin)
+            const filterVendorEl = document.getElementById('filter-vendor-ritase');
+            if (userRole === 'admin' && filterVendorEl) {
+                const currentSelected = filterVendorEl.value;
+                const uniqueVendors = [...new Set(ritaseData.map(r => r.vendor).filter(Boolean))].sort();
+                let vendorHtml = `<option value="ALL">-- Semua Vendor --</option>`;
+                uniqueVendors.forEach(v => { 
+                    vendorHtml += `<option value="${v}" ${v === currentSelected ? 'selected' : ''}>${v}</option>`; 
+                });
+                filterVendorEl.innerHTML = vendorHtml;
+            }
+
             const searchVal = (document.getElementById('search-ritase')?.value || '').toLowerCase();
             const startVal = document.getElementById('filter-start-date')?.value;
             const endVal = document.getElementById('filter-end-date')?.value;
+            const vendorVal = filterVendorEl ? filterVendorEl.value : 'ALL';
+
             let filteredData = ritaseData;
+
+            // 2. TERAPKAN FILTER VENDOR
+            if (userRole === 'admin' && vendorVal !== 'ALL') {
+                filteredData = filteredData.filter(r => r.vendor === vendorVal);
+            }
+
+            // 3. TERAPKAN FILTER TANGGAL
             if (startVal || endVal) {
                 const startObj = startVal ? new Date(startVal) : new Date(0); startObj.setHours(0, 0, 0, 0);
                 const endObj = endVal ? new Date(endVal) : new Date(8640000000000000); endObj.setHours(23, 59, 59, 999);
                 filteredData = filteredData.filter(r => { const rDate = new Date(r.tgl_selesai); return rDate >= startObj && rDate <= endObj; });
             }
+            
+            // 4. TERAPKAN SEARCH BOX
             if (searchVal) filteredData = filteredData.filter(r => { return (r.plat_nomor || '').toLowerCase().includes(searchVal) || (r.vendor || '').toLowerCase().includes(searchVal) || (r.nama_driver || '').toLowerCase().includes(searchVal) || (r.no_container || '').toLowerCase().includes(searchVal) || (r.jenis_produk || '').toLowerCase().includes(searchVal) || (r.fo || '').toLowerCase().includes(searchVal) || (r.jenis_mobil || '').toLowerCase().includes(searchVal) || (r.dn || '').toLowerCase().includes(searchVal); });
+            
+            // 5. RENDER KE DALAM TABEL
             filteredData.forEach(r => { 
                 const formatOptions = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: false};
                 const tanggalSelesai = new Date(r.tgl_selesai).toLocaleString('id-ID', formatOptions);
@@ -2433,6 +3003,7 @@
 
                 tb.innerHTML += `<tr class="group hover:bg-emerald-50/30 transition-colors"><td class="font-bold text-emerald-600 text-xs whitespace-nowrap">${tanggalSelesai}</td><td class="font-bold text-gray-700 text-sm whitespace-nowrap">${r.vendor || '-'}</td><td class="font-extrabold text-blue-600 whitespace-nowrap">${r.plat_nomor || '-'}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.jenis_mobil || '-'}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.nama_driver || '-'}</td><td class="text-sm font-bold text-blue-600 whitespace-nowrap">${r.fo || '-'}</td><td class="text-sm font-medium text-gray-600 whitespace-nowrap">${r.dn || '-'}</td><td class="text-sm font-medium text-gray-600 whitespace-nowrap">${r.no_container || '-'}</td><td class="text-sm text-gray-600 whitespace-nowrap">${r.jenis_produk || '-'}</td><td class="text-xs text-gray-500 whitespace-nowrap">${dcoStr}</td><td class="text-xs text-gray-500 whitespace-nowrap">${t1}</td><td class="text-xs text-gray-500 whitespace-nowrap">${t2}</td>${actionTd}</tr>`; 
             }); 
+
             if(filteredData.length === 0) {
                 const colspan = userRole === 'admin' ? 13 : 12;
                 tb.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-6 text-gray-500 font-bold">Tidak ada data ritase yang sesuai pencarian/filter.</td></tr>`;
@@ -2562,7 +3133,7 @@
         };
 
         window.editStatus = async (id, oldName) => {
-            const { value: newName } = await Swal.fire({ 
+            const { value: newName } = await Swal.fire({
                 title: 'Edit Status', input: 'text', inputValue: oldName, 
                 showCancelButton: true, confirmButtonColor: '#2563eb' 
             });
@@ -2575,6 +3146,437 @@
             if(confirm("Yakin menghapus status ini?")) {
                 await deleteDoc(doc(db, "master_statuses", id));
             }
+        };
+
+        // ==========================================
+        // FUNGSI MANAJEMEN REPO (ADMIN ONLY) - CHECKLIST & INLINE UPDATE
+        // ==========================================
+        window.selectedRepoFOs = []; // Variabel penyimpan FO terpilih
+
+        window.updateRepoFODropdown = () => {
+            window.renderRepoFOCheckboxes();
+        };
+
+        window.renderRepoFOCheckboxes = () => {
+            const listContainer = document.getElementById('repo-fo-list');
+            const searchInput = document.getElementById('search-repo-fo');
+            const countDisplay = document.getElementById('repo-selected-count');
+            if(!listContainer) return;
+
+            const searchVal = (searchInput ? searchInput.value : '').toLowerCase();
+
+            // Ambil data Ritase yang valid & belum masuk repo
+            const existingRepoFOs = repoData.map(rp => rp.fo);
+            let validRitase = ritaseData.filter(r => r.fo && r.fo.trim() !== '' && !existingRepoFOs.includes(r.fo));
+
+            // Filter Pencarian
+            if (searchVal) {
+                validRitase = validRitase.filter(r => 
+                    (r.fo || '').toLowerCase().includes(searchVal) || 
+                    (r.plat_nomor || '').toLowerCase().includes(searchVal) || 
+                    (r.vendor || '').toLowerCase().includes(searchVal)
+                );
+            }
+
+            let html = ``;
+            if (validRitase.length === 0) {
+                html = `<div class="p-5 text-sm text-gray-400 text-center font-bold italic"><i class="fas fa-search block text-2xl mb-2 opacity-50"></i>FO tidak ditemukan.</div>`;
+            } else {
+                validRitase.forEach(r => {
+                    const isChecked = window.selectedRepoFOs.includes(r.fo) ? 'checked' : '';
+                    const bgClass = isChecked ? 'bg-blue-50 border-blue-200' : 'bg-transparent border-transparent hover:bg-gray-50 hover:border-gray-200';
+                    
+                    html += `
+                    <label class="flex items-center p-3 rounded-xl cursor-pointer transition-colors border ${bgClass}">
+                        <input type="checkbox" value="${r.fo}" class="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 mr-4 cursor-pointer" onchange="window.toggleRepoFO(this)" ${isChecked}>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-extrabold text-gray-800">${r.fo}</span>
+                            <span class="text-[11px] font-semibold text-gray-500 mt-0.5"><i class="fas fa-truck mr-1"></i>${r.plat_nomor} <span class="mx-1 text-gray-300">|</span> <i class="fas fa-building mr-1"></i>${r.vendor} <span class="mx-1 text-gray-300">|</span> DN: ${r.dn || '-'}</span>
+                        </div>
+                    </label>`;
+                });
+            }
+            listContainer.innerHTML = html;
+            if(countDisplay) countDisplay.innerText = `${window.selectedRepoFOs.length} FO Terpilih`;
+        };
+
+        window.toggleRepoFO = (checkbox) => {
+            const foVal = checkbox.value;
+            if (checkbox.checked) {
+                if (!window.selectedRepoFOs.includes(foVal)) window.selectedRepoFOs.push(foVal);
+            } else {
+                window.selectedRepoFOs = window.selectedRepoFOs.filter(fo => fo !== foVal);
+            }
+            document.getElementById('repo-selected-count').innerText = `${window.selectedRepoFOs.length} FO Terpilih`;
+            window.renderRepoFOCheckboxes(); // Render ulang agar background ter-update
+        };
+
+        window.addRepo = async () => {
+            const lokasi = document.getElementById('repo-lokasi').value;
+
+            if(window.selectedRepoFOs.length === 0 || !lokasi) {
+                return Swal.fire({icon: 'error', title: 'Data Tidak Lengkap', text: 'Mohon centang minimal 1 FO dari daftar, lalu pilih Lokasi Repo Tujuan!', confirmButtonColor: '#2563eb'});
+            }
+
+            Swal.fire({ title: `Menyimpan ${window.selectedRepoFOs.length} Data Repo...`, allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+            try {
+                const promises = window.selectedRepoFOs.map(foVal => {
+                    const r = ritaseData.find(x => x.fo === foVal) || {};
+                    return addDoc(collection(db, "repo"), {
+                        fo: foVal, 
+                        dn: r.dn || '-',
+                        no_container: r.no_container || '-', 
+                        vendor: r.vendor || '-', 
+                        nama_driver: r.nama_driver || '-', 
+                        no_hp: r.no_hp || '-',
+                        plat_nomor: r.plat_nomor || '-', 
+                        lokasi_repo: lokasi, 
+                        tgl_masuk_repo: "", 
+                        tgl_open: "",       
+                        nama_kapal: "",
+                        status_repo: "Aktif",        // Status Default
+                        tgl_selesai_repo: null,      // Tgl Selesai Default
+                        createdAt: Date.now()
+                    });
+                });
+
+                await Promise.all(promises);
+                
+                document.getElementById('repo-lokasi').value = '';
+                const searchInput = document.getElementById('search-repo-fo');
+                if(searchInput) searchInput.value = ''; 
+                
+                window.selectedRepoFOs = []; 
+                window.updateRepoFODropdown(); 
+                
+                Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Berhasil Dipindah Ke Repo', showConfirmButton: false, timer: 1500});
+            } catch (error) {
+                Swal.fire({icon: 'error', title: 'Gagal Menyimpan', text: error.message});
+            }
+        };
+
+        window.renderRepoTable = () => {
+            const tb = document.querySelector('#table-admin-repo tbody');
+            if(!tb) return;
+            tb.innerHTML = '';
+            
+            // Hanya filter data yang statusnya BUKAN Selesai
+            let repoAktif = repoData.filter(rp => rp.status_repo !== 'Selesai');
+            
+            if(repoAktif.length === 0) {
+                tb.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500 font-bold"><i class="fas fa-warehouse text-4xl mb-3 block opacity-50"></i>Belum ada data Repo saat ini.</td></tr>`;
+                return;
+            }
+            
+            repoAktif.forEach(rp => {
+                const formatOpts = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: false};
+                const masuk = rp.tgl_masuk_repo ? new Date(rp.tgl_masuk_repo).toLocaleString('id-ID', formatOpts) : '<span class="text-[10px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded font-bold border border-red-100">BELUM DIISI</span>';
+                const open = rp.tgl_open ? new Date(rp.tgl_open).toLocaleString('id-ID', formatOpts) : '<span class="text-[10px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded font-bold border border-red-100">BELUM DIISI</span>';
+                const kapal = rp.nama_kapal ? rp.nama_kapal : '<span class="text-[10px] text-gray-400 italic">Belum diisi</span>';
+
+                let badgeColor = rp.lokasi_repo === 'GPI' ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 
+                                (rp.lokasi_repo === 'Maruzen' ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-amber-100 text-amber-700 border-amber-200');
+
+                tb.innerHTML += `<tr class="group hover:bg-gray-50 transition-colors">
+                    <td class="font-black text-blue-600 text-base">${rp.fo}</td>
+                    <td>
+                        <p class="text-xs font-bold text-gray-800 mb-0.5">DN: ${rp.dn || '-'}</p>
+                        <p class="text-xs font-medium text-gray-500">Cont: ${rp.no_container || '-'}</p>
+                    </td>
+                    <td>
+                        <p class="text-xs font-bold text-gray-800 mb-0.5">${rp.vendor || '-'}</p>
+                        <p class="text-[10px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded inline-block">${rp.plat_nomor || '-'}</p>
+                    </td>
+                    <td class="text-center"><span class="badge border ${badgeColor} px-3 py-1 shadow-sm">${rp.lokasi_repo}</span></td>
+                    <td>
+                        <div class="grid grid-cols-1 gap-1 text-xs">
+                            <div class="flex items-center"><i class="fas fa-ship text-blue-400 w-4"></i> <span class="font-bold text-gray-800">${kapal}</span></div>
+                            <div class="flex items-center"><i class="fas fa-sign-in-alt text-emerald-500 w-4"></i> <span class="text-gray-600">${masuk}</span></div>
+                            <div class="flex items-center"><i class="fas fa-door-open text-orange-400 w-4"></i> <span class="text-gray-600">${open}</span></div>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <div class="flex flex-col gap-2">
+                            <button onclick="window.finishRepo('${rp.id}')" class="btn-success py-1.5 px-3 text-[11px] justify-center shadow-sm w-full"><i class="fas fa-check-double mr-1"></i> Selesai</button>
+                            <button onclick="window.editRepoDetail('${rp.id}')" class="btn-primary py-1.5 px-3 text-[11px] justify-center shadow-sm w-full"><i class="fas fa-edit mr-1"></i> Update Detail</button>
+                            <button onclick="window.deleteRepo('${rp.id}')" class="btn-outline py-1.5 px-3 text-[11px] justify-center text-red-500 border-red-200 hover:bg-red-50 w-full"><i class="fas fa-trash mr-1"></i> Hapus</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+        };
+
+        // Fungsi Popup Update Jam Masuk, Tgl Open, Nama Kapal
+        window.editRepoDetail = async (id) => {
+            const rp = repoData.find(x => x.id === id);
+            if(!rp) return;
+
+            const { value: formValues } = await Swal.fire({
+                title: '<span style="font-size: 1.25rem; font-family: Poppins; font-weight:800; color:#1e293b;">Update Detail Kapal & Waktu</span>',
+                // Tambahkan custom class agar popup membulat mulus
+                customClass: {
+                    popup: 'rounded-2xl shadow-2xl border border-gray-100'
+                },
+                html: `
+                    <div class="text-left font-sans mt-3">
+                        <!-- Info Banner FO & Vendor -->
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 mb-6 shadow-sm">
+                            <p class="text-[10px] font-extrabold text-blue-400 uppercase tracking-widest mb-1">Update Data Untuk</p>
+                            <h4 class="text-xl font-black text-blue-700 leading-none">${rp.fo}</h4>
+                            <p class="text-xs font-bold text-blue-500 mt-1.5"><i class="fas fa-building mr-1.5"></i>${rp.vendor}</p>
+                        </div>
+                        
+                        <!-- Form Input Group -->
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-2"><i class="fas fa-sign-in-alt text-blue-400 mr-1.5 w-4"></i>Jam/Tgl Masuk Repo</label>
+                                <input type="datetime-local" id="sw-repo-masuk" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm box-border" value="${rp.tgl_masuk_repo || ''}">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-2"><i class="fas fa-door-open text-orange-400 mr-1.5 w-4"></i>Tanggal Open</label>
+                                <input type="datetime-local" id="sw-repo-open" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all shadow-sm box-border" value="${rp.tgl_open || ''}">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-2"><i class="fas fa-ship text-emerald-400 mr-1.5 w-4"></i>Nama Kapal</label>
+                                <input type="text" id="sw-repo-kapal" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all shadow-sm box-border" placeholder="Ketik nama kapal tujuan..." value="${rp.nama_kapal || ''}" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true, 
+                confirmButtonColor: '#2563eb', 
+                cancelButtonColor: '#94a3b8', 
+                confirmButtonText: '<i class="fas fa-save mr-1.5"></i> Simpan Detail',
+                cancelButtonText: 'Batal',
+                didOpen: () => { 
+                    // Inisialisasi kalender Flatpickr agar tampilannya seragam dengan halaman utama
+                    if (window.initFlatpickr) window.initFlatpickr(); 
+                },
+                preConfirm: () => {
+                    return {
+                        tgl_masuk_repo: document.getElementById('sw-repo-masuk').value,
+                        tgl_open: document.getElementById('sw-repo-open').value,
+                        nama_kapal: document.getElementById('sw-repo-kapal').value.trim()
+                    }
+                }
+            });
+
+            if(formValues) {
+                await updateDoc(doc(db, "repo", id), formValues);
+                Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Detail Repo Diperbarui', showConfirmButton: false, timer: 1500});
+            }
+        };
+
+        window.deleteRepo = async (id) => {
+            Swal.fire({
+                title: 'Hapus Data Repo?', text: "Data ini akan dihapus dari tabel Repo (Data ritase asli tetap aman).",
+                icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus'
+            }).then(async (r) => {
+                if(r.isConfirmed) {
+                    await deleteDoc(doc(db, "repo", id));
+                    Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Data Dihapus', showConfirmButton: false, timer: 1500});
+                }
+            });
+        };
+
+        window.finishRepo = async (id) => {
+            const rp = repoData.find(x => x.id === id);
+            if(!rp) return;
+
+            // Validasi: Wajib mengisi detail sebelum selesai
+            if(!rp.tgl_masuk_repo || !rp.tgl_open || !rp.nama_kapal) {
+                return Swal.fire({icon: 'error', title: 'Detail Belum Lengkap', text: 'Mohon Update Detail (Jam Masuk, Tgl Open, Nama Kapal) terlebih dahulu sebelum menandai Selesai!', confirmButtonColor: '#2563eb'});
+            }
+
+            Swal.fire({
+                title: 'Selesaikan Repo?', text: "FO ini akan dipindahkan ke Historikal Repo.",
+                icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonColor: '#cbd5e1', confirmButtonText: 'Ya, Selesai'
+            }).then(async (r) => {
+                if(r.isConfirmed) {
+                    await updateDoc(doc(db, "repo", id), { status_repo: 'Selesai', tgl_selesai_repo: Date.now() });
+                    Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Repo Selesai', showConfirmButton: false, timer: 1500});
+                }
+            });
+        };
+
+        window.renderHistorikalRepo = () => {
+            const tb = document.querySelector('#table-historikal-repo tbody');
+            if(!tb) return;
+            tb.innerHTML = '';
+            
+            // Filter khusus data yang sudah 'Selesai'
+            let repoSelesai = repoData.filter(rp => rp.status_repo === 'Selesai');
+            
+            const searchVal = (document.getElementById('search-historikal-repo')?.value || '').toLowerCase();
+            const startVal = document.getElementById('filter-start-historikal')?.value;
+            const endVal = document.getElementById('filter-end-historikal')?.value;
+            
+            if (startVal || endVal) {
+                const startObj = startVal ? new Date(startVal) : new Date(0); startObj.setHours(0, 0, 0, 0);
+                const endObj = endVal ? new Date(endVal) : new Date(8640000000000000); endObj.setHours(23, 59, 59, 999);
+                repoSelesai = repoSelesai.filter(r => { 
+                    if(!r.tgl_selesai_repo) return false;
+                    const rDate = new Date(r.tgl_selesai_repo); 
+                    return rDate >= startObj && rDate <= endObj; 
+                });
+            }
+            
+            if(searchVal) {
+                repoSelesai = repoSelesai.filter(r => 
+                    (r.fo||'').toLowerCase().includes(searchVal) || 
+                    (r.nama_kapal||'').toLowerCase().includes(searchVal) || 
+                    (r.vendor||'').toLowerCase().includes(searchVal) ||
+                    (r.no_container||'').toLowerCase().includes(searchVal)
+                );
+            }
+
+            if(repoSelesai.length === 0) {
+                // Colspan diubah menjadi 7 karena ada tambahan kolom Aksi
+                tb.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-gray-500 font-bold">Tidak ada data Historikal Repo.</td></tr>`;
+                return;
+            }
+            
+            repoSelesai.sort((a,b) => b.tgl_selesai_repo - a.tgl_selesai_repo).forEach(rp => {
+                const formatOpts = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: false};
+                const selesai = rp.tgl_selesai_repo ? new Date(rp.tgl_selesai_repo).toLocaleString('id-ID', formatOpts) : '-';
+                const masuk = rp.tgl_masuk_repo ? new Date(rp.tgl_masuk_repo).toLocaleString('id-ID', formatOpts) : '-';
+                const open = rp.tgl_open ? new Date(rp.tgl_open).toLocaleString('id-ID', formatOpts) : '-';
+                const kapal = rp.nama_kapal || '-';
+
+                let badgeColor = rp.lokasi_repo === 'GPI' ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 
+                                (rp.lokasi_repo === 'Maruzen' ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-amber-100 text-amber-700 border-amber-200');
+
+                tb.innerHTML += `<tr class="group hover:bg-emerald-50/30 transition-colors">
+                    <td class="font-bold text-emerald-600 text-xs">${selesai}</td>
+                    <td class="font-black text-blue-600 text-base">${rp.fo}</td>
+                    <td>
+                        <p class="text-xs font-bold text-gray-800 mb-0.5">DN: ${rp.dn || '-'}</p>
+                        <p class="text-xs font-medium text-gray-500">Cont: ${rp.no_container || '-'}</p>
+                    </td>
+                    <td>
+                        <p class="text-xs font-bold text-gray-800 mb-0.5">${rp.vendor || '-'}</p>
+                        <p class="text-[10px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded inline-block">${rp.plat_nomor || '-'}</p>
+                    </td>
+                    <td class="text-center"><span class="badge border ${badgeColor} px-3 py-1 shadow-sm">${rp.lokasi_repo}</span></td>
+                    <td>
+                        <div class="grid grid-cols-1 gap-1 text-xs">
+                            <div class="flex items-center"><i class="fas fa-ship text-blue-400 w-4"></i> <span class="font-bold text-gray-800">${kapal}</span></div>
+                            <div class="flex items-center"><i class="fas fa-sign-in-alt text-emerald-500 w-4"></i> <span class="text-gray-600">${masuk}</span></div>
+                            <div class="flex items-center"><i class="fas fa-door-open text-orange-400 w-4"></i> <span class="text-gray-600">${open}</span></div>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="window.editRepoDetail('${rp.id}')" class="w-8 h-8 rounded-lg bg-yellow-50 text-yellow-500 hover:bg-yellow-500 hover:text-white transition-colors" title="Edit Detail Kapal"><i class="fas fa-pen"></i></button>
+                            <button onclick="window.deleteRepo('${rp.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Hapus Data"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+        };
+
+        window.exportHistorikalRepo = (filename) => {
+            // 1. Ambil dan filter data yang sama seperti di tabel
+            let repoSelesai = repoData.filter(rp => rp.status_repo === 'Selesai');
+            
+            const searchVal = (document.getElementById('search-historikal-repo')?.value || '').toLowerCase();
+            const startVal = document.getElementById('filter-start-historikal')?.value;
+            const endVal = document.getElementById('filter-end-historikal')?.value;
+            
+            if (startVal || endVal) {
+                const startObj = startVal ? new Date(startVal) : new Date(0); startObj.setHours(0, 0, 0, 0);
+                const endObj = endVal ? new Date(endVal) : new Date(8640000000000000); endObj.setHours(23, 59, 59, 999);
+                repoSelesai = repoSelesai.filter(r => { 
+                    if(!r.tgl_selesai_repo) return false;
+                    const rDate = new Date(r.tgl_selesai_repo); 
+                    return rDate >= startObj && rDate <= endObj; 
+                });
+            }
+            
+            if(searchVal) {
+                repoSelesai = repoSelesai.filter(r => 
+                    (r.fo||'').toLowerCase().includes(searchVal) || 
+                    (r.nama_kapal||'').toLowerCase().includes(searchVal) || 
+                    (r.vendor||'').toLowerCase().includes(searchVal) ||
+                    (r.no_container||'').toLowerCase().includes(searchVal)
+                );
+            }
+
+            // 2. Mapping data menjadi 1 Kolom 1 Data (Format Excel Bersih)
+            const formatOpts = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: false};
+            const excelData = repoSelesai.sort((a,b) => b.tgl_selesai_repo - a.tgl_selesai_repo).map((rp, index) => {
+                return {
+                    "No": index + 1,
+                    "Tanggal Selesai": rp.tgl_selesai_repo ? new Date(rp.tgl_selesai_repo).toLocaleString('id-ID', formatOpts) : '-',
+                    "Nomor FO": rp.fo || '-',
+                    "Delivery Note (DN)": rp.dn || '-',
+                    "Nomor Container": rp.no_container || '-',
+                    "Vendor Pengelola": rp.vendor || '-',
+                    "Plat Nomor": rp.plat_nomor || '-',
+                    "Lokasi Repo": rp.lokasi_repo || '-',
+                    "Nama Kapal": rp.nama_kapal || '-',
+                    "Tanggal Masuk Repo": rp.tgl_masuk_repo ? new Date(rp.tgl_masuk_repo).toLocaleString('id-ID', formatOpts) : '-',
+                    "Tanggal Open": rp.tgl_open ? new Date(rp.tgl_open).toLocaleString('id-ID', formatOpts) : '-'
+                };
+            });
+
+            if (excelData.length === 0) {
+                return Swal.fire({icon: 'warning', title: 'Data Kosong', text: 'Tidak ada data untuk diekspor.'});
+            }
+
+            // 3. Generate dan Download Excel menggunakan json_to_sheet
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Historikal_Repo");
+            
+            XLSX.writeFile(workbook, `${filename}_${new Date().getTime()}.xlsx`);
+        };
+
+        window.exportRepoModalExcel = (type) => {
+            const lokasi = type.replace('repo_', '');
+            let repoAktif = repoData.filter(rp => rp.status_repo !== 'Selesai' && rp.lokasi_repo === lokasi);
+            
+            const searchInput = document.getElementById('modal-search-repo-input');
+            const searchVal = searchInput ? searchInput.value.toLowerCase() : '';
+
+            if(searchVal) {
+                repoAktif = repoAktif.filter(r => 
+                    (r.fo||'').toLowerCase().includes(searchVal) || 
+                    (r.nama_kapal||'').toLowerCase().includes(searchVal) || 
+                    (r.vendor||'').toLowerCase().includes(searchVal) ||
+                    (r.no_container||'').toLowerCase().includes(searchVal) ||
+                    (r.plat_nomor||'').toLowerCase().includes(searchVal)
+                );
+            }
+
+            const formatOpts = {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: false};
+            const excelData = repoAktif.map((rp, index) => {
+                return {
+                    "No": index + 1,
+                    "Nomor FO": rp.fo || '-',
+                    "Delivery Note (DN)": rp.dn || '-',
+                    "Nomor Container": rp.no_container || '-',
+                    "Vendor Pengelola": rp.vendor || '-',
+                    "Plat Nomor": rp.plat_nomor || '-',
+                    "Lokasi Repo": rp.lokasi_repo || '-',
+                    "Tanggal Masuk Repo": rp.tgl_masuk_repo ? new Date(rp.tgl_masuk_repo).toLocaleString('id-ID', formatOpts) : '-',
+                    "Tanggal Open": rp.tgl_open ? new Date(rp.tgl_open).toLocaleString('id-ID', formatOpts) : '-',
+                    "Nama Kapal": rp.nama_kapal || '-'
+                };
+            });
+
+            if (excelData.length === 0) {
+                return Swal.fire({icon: 'warning', title: 'Data Kosong', text: 'Tidak ada data untuk diekspor.'});
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, `Repo_${lokasi}`);
+            
+            XLSX.writeFile(workbook, `Detail_Repo_${lokasi}_${new Date().getTime()}.xlsx`);
         };
     </script>
 </body>
